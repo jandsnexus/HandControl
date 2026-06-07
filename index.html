@@ -3,128 +3,403 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Anatomie Explorer</title>
+<title>Anatomie Lab — Sam</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#070b0f; --bg2:#0d141b; --accent:#2dd4bf; --accent-dim:#155e57;
-    --text:#e6f1ef; --text-dim:#6b8a86; --line:rgba(45,212,191,.18);
+    --bg:#05080b; --panel:#0a1016; --panel2:#0d141b; --accent:#2dd4bf; --accent2:#7c9cff;
+    --red:#ff5b6e; --text:#dfeeeb; --dim:#5f7d79; --line:rgba(45,212,191,.16); --grid:rgba(45,212,191,.05);
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace}
-  body{position:relative;overflow-x:hidden}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace}
+  body{overflow:hidden}
+  /* lab grid + scanline atmosphere */
   body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
-    background:radial-gradient(circle at 25% 15%,rgba(45,212,191,.12),transparent 45%),
-               radial-gradient(circle at 85% 90%,rgba(124,156,255,.07),transparent 50%)}
-  .wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:60px 28px 80px}
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:38px 38px}
+  body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(circle at 20% 0%,rgba(45,212,191,.10),transparent 45%),radial-gradient(circle at 100% 100%,rgba(124,156,255,.06),transparent 45%)}
 
-  header{margin-bottom:48px}
-  .badge{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:2px;
-    text-transform:uppercase;color:var(--accent);border:1px solid var(--line);
-    border-radius:30px;padding:6px 14px;margin-bottom:22px}
-  .badge .d{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
-  h1{font-size:38px;font-weight:700;letter-spacing:-.5px;line-height:1.1;margin-bottom:14px}
-  h1 .accent{color:var(--accent)}
-  .lead{font-size:14px;color:var(--text-dim);max-width:560px;line-height:1.8}
+  /* ============ PASSWORD GATE ============ */
+  #gate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 40%,#08121a,#04070a);}
+  #gate.gone{opacity:0;pointer-events:none;transition:opacity .6s}
+  .lock{width:360px;max-width:90vw;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:30px 28px;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .lock .corner{position:absolute;width:14px;height:14px;border:2px solid var(--accent)}
+  .lock .c1{top:8px;left:8px;border-right:0;border-bottom:0}
+  .lock .c2{top:8px;right:8px;border-left:0;border-bottom:0}
+  .lock .c3{bottom:8px;left:8px;border-right:0;border-top:0}
+  .lock .c4{bottom:8px;right:8px;border-left:0;border-top:0}
+  .lock .sys{font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:18px}
+  .lock h1{font-size:20px;font-weight:700;letter-spacing:.5px;margin-bottom:6px}
+  .lock p{font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:22px}
+  .lock input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);
+    font-family:inherit;font-size:14px;letter-spacing:3px;padding:13px 14px;text-align:center}
+  .lock input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,212,191,.12)}
+  .lock button{width:100%;margin-top:12px;background:var(--accent);color:#04070a;border:none;border-radius:8px;
+    font-family:inherit;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:12px;padding:13px;cursor:pointer;transition:.2s}
+  .lock button:hover{box-shadow:0 0 26px rgba(45,212,191,.45)}
+  .lock .err{color:var(--red);font-size:11px;letter-spacing:1px;height:16px;margin-top:10px;text-align:center}
+  .lock.shake{animation:shake .4s}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
-  .card{position:relative;display:block;text-decoration:none;color:inherit;background:var(--bg2);
-    border:1px solid var(--line);border-radius:16px;overflow:hidden;
-    transition:transform .25s,border-color .25s,box-shadow .25s}
-  .card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 14px 40px rgba(0,0,0,.5)}
-  .thumb{height:130px;display:flex;align-items:center;justify-content:center;
-    background:radial-gradient(circle at 50% 60%,rgba(45,212,191,.08),transparent 70%);
-    border-bottom:1px solid var(--line)}
-  .thumb svg{width:74px;height:74px}
-  .meta{padding:16px 18px}
-  .meta .t{font-size:16px;font-weight:700;margin-bottom:4px}
-  .meta .s{font-size:11px;color:var(--text-dim);letter-spacing:.5px;line-height:1.5}
-  .tag{position:absolute;top:12px;right:12px;font-size:9px;letter-spacing:1px;text-transform:uppercase;
-    padding:4px 9px;border-radius:20px;background:rgba(45,212,191,.12);color:var(--accent)}
-  .card.soon{opacity:.5;pointer-events:none}
-  .card.soon .tag{background:rgba(107,138,134,.15);color:var(--text-dim)}
+  /* ============ WORKSPACE ============ */
+  #lab{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;opacity:0;transition:opacity .6s}
+  #lab.on{opacity:1}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--line);flex-shrink:0}
+  .logo{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:2px}
+  .logo .d{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:pulse 2s infinite}
+  .logo span{color:var(--accent)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .bar-r{display:flex;align-items:center;gap:18px;font-size:11px;color:var(--dim);letter-spacing:1px}
+  .bar-r .clock{color:var(--text)}
+  .who{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:30px;padding:5px 13px;color:var(--accent)}
+  .who .av{width:7px;height:7px;border-radius:50%;background:var(--accent)}
 
-  .foot{margin-top:46px;font-size:11px;color:var(--text-dim);letter-spacing:.5px;line-height:1.9}
-  .foot b{color:var(--text)}
-  @media(max-width:520px){h1{font-size:28px}.wrap{padding:40px 20px 60px}}
+  .cols{flex:1;display:grid;grid-template-columns:230px 1fr 300px;gap:14px;padding:14px;overflow:hidden}
+
+  .panel{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .panel::before,.panel::after{content:"";position:absolute;width:10px;height:10px;border:1px solid var(--accent);opacity:.5}
+  .panel::before{top:6px;left:6px;border-right:0;border-bottom:0}
+  .panel::after{bottom:6px;right:6px;border-left:0;border-top:0}
+  .ph{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line);
+    font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
+  .ph b{color:var(--accent);font-weight:500}
+
+  /* sidebar */
+  .side{display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+  .side .lab-h{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:0 4px 6px}
+  .navlist{display:flex;flex-direction:column;gap:6px}
+  .nav{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);
+    border:1px solid transparent;border-radius:9px;padding:10px 12px;font-size:13px;transition:.18s;background:var(--panel)}
+  .nav:hover{border-color:var(--accent);background:var(--panel2);transform:translateX(3px)}
+  .nav .ic{width:22px;height:22px;flex-shrink:0}
+  .nav .ic svg{width:22px;height:22px}
+  .nav small{display:block;color:var(--dim);font-size:9px;letter-spacing:.5px;margin-top:1px}
+  .syslist{font-size:11px;color:var(--dim);line-height:2;letter-spacing:.5px;padding:4px 4px}
+  .syslist .ok{color:var(--accent)}
+
+  /* main */
+  .main{display:grid;grid-template-rows:1fr auto auto;gap:14px;overflow:hidden}
+  .specimen{display:flex;flex-direction:column;min-height:0}
+  #dna-canvas{flex:1;width:100%;min-height:0;display:block;cursor:pointer}
+  .ekgwrap{height:150px;display:flex;flex-direction:column}
+  #ekg{flex:1;width:100%;display:block}
+  .vitals{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .vital{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 14px}
+  .vital .l{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+  .vital .v{font-size:24px;font-weight:700;color:var(--text);line-height:1}
+  .vital .v small{font-size:11px;color:var(--dim);font-weight:400}
+  .vital.hr .v{color:var(--red)}
+
+  /* right column */
+  .right{display:grid;grid-template-rows:auto auto 1fr;gap:14px;overflow:hidden}
+  .camwrap{position:relative;aspect-ratio:4/3;background:#000;border-radius:8px;overflow:hidden;margin:12px}
+  #cam{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  .camwrap .frame{position:absolute;inset:0;pointer-events:none;border:1px solid var(--line);border-radius:8px}
+  .camwrap .br{position:absolute;width:16px;height:16px;border:2px solid var(--accent)}
+  .camwrap .b1{top:8px;left:8px;border-right:0;border-bottom:0}
+  .camwrap .b2{top:8px;right:8px;border-left:0;border-bottom:0}
+  .camwrap .b3{bottom:8px;left:8px;border-right:0;border-top:0}
+  .camwrap .b4{bottom:8px;right:8px;border-left:0;border-top:0}
+  .camwrap .rec{position:absolute;top:10px;left:12px;font-size:9px;letter-spacing:1px;color:var(--accent);display:flex;align-items:center;gap:5px}
+  .camwrap .rec .d{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:pulse 1.4s infinite}
+  .camoff{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--dim);letter-spacing:1px;text-align:center;padding:10px}
+  .info{padding:14px;font-size:11px;line-height:2;letter-spacing:.5px}
+  .info .row{display:flex;justify-content:space-between}
+  .info .row span:first-child{color:var(--dim)}
+  .info .row span:last-child{color:var(--text)}
+  .info .row .ok{color:var(--accent)}
+  .notes{display:flex;flex-direction:column}
+  .notes .body{padding:14px;font-size:11px;color:var(--dim);line-height:1.8;overflow-y:auto}
+  .notes b{color:var(--text)}
+
+  @media(max-width:980px){
+    body{overflow:auto}
+    #lab{height:auto;min-height:100%}
+    .cols{grid-template-columns:1fr;overflow:visible}
+    .main{grid-template-rows:none}
+    .specimen{height:320px}
+    .vitals{grid-template-columns:repeat(2,1fr)}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="badge"><span class="d"></span>Hand-gesteuert · 3D · Kostenlos</div>
-    <h1>Anatomie <span class="accent">Explorer</span></h1>
-    <p class="lead">Steuere 3D-Modelle mit deiner Hand über die Kamera. Drehen, zoomen, einzelne Teile anklicken und eigene Notizen speichern. Wähle ein Modell zum Starten.</p>
-  </header>
 
-  <div class="grid">
-
-    <a class="card" href="dna.html">
-      <span class="tag">Modell</span>
-      <div class="thumb">
-        <svg viewBox="0 0 100 100" fill="none" stroke="#2dd4bf" stroke-width="3" stroke-linecap="round">
-          <path d="M35 10 C70 30 30 50 65 70 C70 75 70 85 65 90"/>
-          <path d="M65 10 C30 30 70 50 35 70 C30 75 30 85 35 90"/>
-          <line x1="38" y1="22" x2="62" y2="22"/><line x1="58" y1="38" x2="42" y2="38"/>
-          <line x1="38" y1="54" x2="62" y2="54"/><line x1="58" y1="70" x2="42" y2="70"/>
-        </svg>
-      </div>
-      <div class="meta"><div class="t">DNA Doppelhelix</div><div class="s">Rückgrat · Basenpaare · rotiert von selbst</div></div>
-    </a>
-
-    <a class="card" href="gehirn.html">
-      <span class="tag">Organ</span>
-      <div class="thumb">
-        <svg viewBox="0 0 100 100" fill="none" stroke="#e8a0a8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M50 20 C30 18 20 32 26 44 C18 50 22 64 34 66 C36 78 54 80 56 68"/>
-          <path d="M50 20 C70 18 80 32 74 44 C82 50 78 64 66 66 C64 78 54 80 56 68"/>
-          <path d="M50 24 L50 68"/>
-        </svg>
-      </div>
-      <div class="meta"><div class="t">Gehirn</div><div class="s">Großhirn · Kleinhirn · Hirnstamm</div></div>
-    </a>
-
-    <a class="card" href="herz.html">
-      <span class="tag">Organ</span>
-      <div class="thumb">
-        <svg viewBox="0 0 100 100" fill="none" stroke="#d6515a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M50 78 C20 56 22 28 40 28 C48 28 50 36 50 40 C50 36 52 28 60 28 C78 28 80 56 50 78 Z"/>
-          <path d="M50 28 C50 18 58 14 64 18"/>
-        </svg>
-      </div>
-      <div class="meta"><div class="t">Herz</div><div class="s">Kammern · Vorhöfe · Aorta</div></div>
-    </a>
-
-    <a class="card" href="lunge.html">
-      <span class="tag">Organ</span>
-      <div class="thumb">
-        <svg viewBox="0 0 100 100" fill="none" stroke="#e0959c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="50" y1="18" x2="50" y2="40"/>
-          <path d="M50 40 C44 44 42 48 38 48 C24 50 22 72 32 82 C40 88 44 80 44 70 C44 56 50 50 50 44"/>
-          <path d="M50 40 C56 44 58 48 62 48 C76 50 78 72 68 82 C60 88 56 80 56 70 C56 56 50 50 50 44"/>
-        </svg>
-      </div>
-      <div class="meta"><div class="t">Lunge</div><div class="s">Lungenflügel · Atemwege</div></div>
-    </a>
-
-    <div class="card soon">
-      <span class="tag">Bald</span>
-      <div class="thumb">
-        <svg viewBox="0 0 100 100" fill="none" stroke="#6b8a86" stroke-width="3" stroke-linecap="round">
-          <circle cx="50" cy="50" r="26"/><line x1="50" y1="34" x2="50" y2="50"/><line x1="50" y1="50" x2="62" y2="58"/>
-        </svg>
-      </div>
-      <div class="meta"><div class="t">Weitere Organe</div><div class="s">Niere, Skelett, Muskeln … kommen Schritt für Schritt</div></div>
-    </div>
-
-  </div>
-
-  <div class="foot">
-    <b>Tipp:</b> Beim ersten Öffnen fragt der Browser nach der Kamera — auf „Erlauben" klicken.<br>
-    Maus ziehen &amp; scrollen funktioniert immer als Fallback, auch ohne Kamera.
+<!-- ===================== PASSWORD GATE ===================== -->
+<div id="gate">
+  <div class="lock" id="lock">
+    <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+    <div class="sys">// Anatomie Lab · Zugang</div>
+    <h1>Gesperrt</h1>
+    <p>Privater Arbeitsbereich. Bitte Passwort eingeben, um das Lab zu öffnen.</p>
+    <input id="pw" type="password" placeholder="• • • • • •" autocomplete="off" />
+    <button id="unlock">Entsperren</button>
+    <div class="err" id="pwerr"></div>
   </div>
 </div>
+
+<!-- ===================== WORKSPACE ===================== -->
+<div id="lab">
+  <div class="bar">
+    <div class="logo"><span class="d"></span>ANATOMIE&nbsp;<span>//</span>&nbsp;LAB</div>
+    <div class="bar-r">
+      <span class="clock" id="clock">--:--:--</span>
+      <span class="who"><span class="av"></span>DR. SAM</span>
+    </div>
+  </div>
+
+  <div class="cols">
+
+    <!-- LEFT: organs -->
+    <aside class="side">
+      <div>
+        <div class="lab-h">Organe</div>
+        <div class="navlist">
+          <a class="nav" href="gehirn.html"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e8a0a8" stroke-width="1.6"><path d="M12 5C8 4 6 7 7 9 5 10 6 13 8 13 8 16 12 16 12 14"/><path d="M12 5c4-1 6 2 5 4 2 1 1 4-1 4 0 3-4 3-4 1"/></svg></span><div>Gehirn<small>Nervensystem</small></div></a>
+          <a class="nav" href="herz.html"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#ff5b6e" stroke-width="1.6"><path d="M12 20C5 15 5 8 9 8c2 0 3 2 3 3 0-1 1-3 3-3 4 0 4 7-3 12Z"/></svg></span><div>Herz<small>Kreislauf</small></div></a>
+          <a class="nav" href="lunge.html"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e0959c" stroke-width="1.6"><path d="M12 4v6M12 10c-1 1-2 1-3 1-3 0-4 5-2 8 2 2 4 0 4-3"/><path d="M12 10c1 1 2 1 3 1 3 0 4 5 2 8-2 2-4 0-4-3"/></svg></span><div>Lunge<small>Atmung</small></div></a>
+          <a class="nav" href="niere.html"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#c9756a" stroke-width="1.6"><path d="M9 5c-3 0-4 4-4 7s1 7 4 7c2 0 2-3 2-7s0-7-2-7Z"/><path d="M15 5c3 0 4 4 4 7s-1 7-4 7c-2 0-2-3-2-7s0-7 2-7Z"/></svg></span><div>Nieren<small>Filterung</small></div></a>
+          <a class="nav" href="duenndarm.html"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e08a7a" stroke-width="1.6"><path d="M6 6c4 0 4 3 0 3s-4 3 0 3 4 3 0 3 4 3 8 0"/></svg></span><div>Dünndarm<small>Verdauung</small></div></a>
+          <a class="nav" href="dickdarm.html"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#c98a5a" stroke-width="1.6"><path d="M7 18V8c0-2 1-3 3-3h4c2 0 3 1 3 3v10"/></svg></span><div>Dickdarm<small>Verdauung</small></div></a>
+          <a class="nav" href="dna.html"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="1.6"><path d="M8 4c8 4-8 12 0 16M16 4c-8 4 8 12 0 16M9 7h6M9 12h6M9 17h6"/></svg></span><div>DNA<small>Molekular</small></div></a>
+        </div>
+      </div>
+      <div>
+        <div class="lab-h">System</div>
+        <div class="syslist">
+          <div>Engine <span class="ok">● bereit</span></div>
+          <div>Tracking <span class="ok">● MediaPipe</span></div>
+          <div>Modelle <span class="ok">7 aktiv</span></div>
+          <div>Speicher <span class="ok">● lokal</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER: live data -->
+    <main class="main">
+      <section class="panel specimen">
+        <div class="ph"><span>Specimen // DNA</span><b id="spinlabel">▶ Rotation aktiv</b></div>
+        <canvas id="dna-canvas" title="Klick = mit der Hand steuern"></canvas>
+      </section>
+
+      <section class="panel ekgwrap">
+        <div class="ph"><span>EKG // Kardiogramm</span><b><span id="bpm">72</span> bpm</b></div>
+        <canvas id="ekg"></canvas>
+      </section>
+
+      <div class="vitals">
+        <div class="vital hr"><div class="l">Herzfrequenz</div><div class="v"><span id="v-hr">72</span> <small>bpm</small></div></div>
+        <div class="vital"><div class="l">SpO₂</div><div class="v"><span id="v-spo2">98</span> <small>%</small></div></div>
+        <div class="vital"><div class="l">Blutdruck</div><div class="v" id="v-bp">118/76</div></div>
+        <div class="vital"><div class="l">Temperatur</div><div class="v"><span id="v-temp">36.7</span> <small>°C</small></div></div>
+      </div>
+    </main>
+
+    <!-- RIGHT: camera + session -->
+    <aside class="right">
+      <section class="panel">
+        <div class="ph"><span>Kamera // Live</span><b id="camstate">offline</b></div>
+        <div class="camwrap">
+          <video id="cam" autoplay playsinline muted></video>
+          <div class="frame"></div>
+          <span class="br b1"></span><span class="br b2"></span><span class="br b3"></span><span class="br b4"></span>
+          <span class="rec"><span class="d"></span>LIVE</span>
+          <div class="camoff" id="camoff">Kamera wird gestartet…</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="ph"><span>Sitzung</span><b>aktiv</b></div>
+        <div class="info">
+          <div class="row"><span>Anwender</span><span>Sam</span></div>
+          <div class="row"><span>Sitzung</span><span id="sess">#0000</span></div>
+          <div class="row"><span>Datum</span><span id="date">--</span></div>
+          <div class="row"><span>Modelle</span><span>7</span></div>
+          <div class="row"><span>Status</span><span class="ok">● Aktiv</span></div>
+        </div>
+      </section>
+
+      <section class="panel notes">
+        <div class="ph"><span>Hinweis</span></div>
+        <div class="body">
+          Wähle links ein <b>Organ</b>, um es in 3D mit der Hand zu steuern.<br><br>
+          <b>Pinch</b> = drehen · <b>2 Hände</b> = zoomen · <b>Klick</b> = Teil-Info.<br><br>
+          Das Specimen-Fenster zeigt die <b>DNA</b> live — anklicken zum Steuern.
+        </div>
+      </section>
+    </aside>
+
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+  import * as THREE from "three";
+
+  // =========================================================
+  //  PASSWORT  — hier änderst du dein Passwort (in Klein-/Großschreibung genau):
+  const PASSWORD = "sam2026";
+  // =========================================================
+
+  const gate = document.getElementById("gate");
+  const lock = document.getElementById("lock");
+  const pw = document.getElementById("pw");
+  const pwerr = document.getElementById("pwerr");
+  const lab = document.getElementById("lab");
+  let started = false;
+
+  function tryUnlock() {
+    if (pw.value === PASSWORD) {
+      gate.classList.add("gone");
+      lab.classList.add("on");
+      if (!started) { started = true; startEverything(); }
+    } else {
+      pwerr.textContent = "Falsches Passwort";
+      lock.classList.remove("shake"); void lock.offsetWidth; lock.classList.add("shake");
+      pw.value = ""; pw.focus();
+    }
+  }
+  document.getElementById("unlock").addEventListener("click", tryUnlock);
+  pw.addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+  pw.focus();
+
+  function startEverything() {
+    startClock();
+    startVitals();
+    startEKG();
+    startDNA();
+    startCamera();
+  }
+
+  // ---------- Uhr + Sitzung ----------
+  function startClock() {
+    const clock = document.getElementById("clock");
+    const dateEl = document.getElementById("date");
+    document.getElementById("sess").textContent = "#" + String(Math.floor(1000 + Math.random() * 8999));
+    function tick() {
+      const d = new Date();
+      clock.textContent = d.toLocaleTimeString("de-DE");
+      dateEl.textContent = d.toLocaleDateString("de-DE");
+    }
+    tick(); setInterval(tick, 1000);
+  }
+
+  // ---------- Vitalwerte (simuliert) ----------
+  function startVitals() {
+    const hr = document.getElementById("v-hr"), hr2 = document.getElementById("bpm");
+    const spo2 = document.getElementById("v-spo2"), temp = document.getElementById("v-temp");
+    let baseHR = 72;
+    setInterval(() => {
+      baseHR += Math.round((Math.random() - 0.5) * 4);
+      baseHR = Math.max(64, Math.min(82, baseHR));
+      hr.textContent = baseHR; hr2.textContent = baseHR;
+      window.__bpm = baseHR;
+      spo2.textContent = 97 + Math.round(Math.random() * 2);
+      temp.textContent = (36.5 + Math.random() * 0.5).toFixed(1);
+    }, 1500);
+  }
+
+  // ---------- EKG / Kardiogramm ----------
+  function startEKG() {
+    const c = document.getElementById("ekg");
+    const ctx = c.getContext("2d");
+    function fit() { c.width = c.clientWidth; c.height = c.clientHeight; }
+    fit(); window.addEventListener("resize", fit);
+    const data = [];
+    let phase = 0;
+    function beat(p) {
+      const g = (cc, w, h) => h * Math.exp(-((p - cc) * (p - cc)) / (2 * w * w));
+      return g(0.14, 0.018, 0.12) - g(0.30, 0.008, 0.18) + g(0.33, 0.006, 0.95) - g(0.36, 0.010, 0.32) + g(0.56, 0.04, 0.28);
+    }
+    function draw() {
+      requestAnimationFrame(draw);
+      const w = c.width, h = c.height;
+      const bpm = window.__bpm || 72;
+      phase += 0.0009 * bpm / 72 + 0.003;
+      data.push(beat(phase % 1));
+      while (data.length > w) data.shift();
+      ctx.clearRect(0, 0, w, h);
+      // grid
+      ctx.strokeStyle = "rgba(45,212,191,.06)"; ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 16) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+      for (let y = 0; y < h; y += 16) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+      // trace
+      ctx.strokeStyle = "#2dd4bf"; ctx.lineWidth = 2; ctx.shadowColor = "#2dd4bf"; ctx.shadowBlur = 6;
+      ctx.beginPath();
+      const mid = h * 0.62, amp = h * 0.42;
+      for (let i = 0; i < data.length; i++) {
+        const y = mid - data[i] * amp;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i, y);
+      }
+      ctx.stroke(); ctx.shadowBlur = 0;
+    }
+    draw();
+  }
+
+  // ---------- DNA Specimen (3D) ----------
+  function startDNA() {
+    const canvas = document.getElementById("dna-canvas");
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 9);
+    scene.add(new THREE.AmbientLight(0x88ffee, 0.6));
+    const key = new THREE.DirectionalLight(0xffffff, 1.3); key.position.set(4, 5, 6); scene.add(key);
+    const rim = new THREE.PointLight(0x7c9cff, 2.2, 40); rim.position.set(-6, -3, 4); scene.add(rim);
+
+    const dna = new THREE.Group();
+    const N = 30, step = 0.32, radius = 1.1, turn = 0.42;
+    const sph = new THREE.SphereGeometry(0.13, 16, 16);
+    const matA = new THREE.MeshStandardMaterial({ color: 0x2dd4bf, metalness: 0.2, roughness: 0.4 });
+    const matB = new THREE.MeshStandardMaterial({ color: 0x7c9cff, metalness: 0.2, roughness: 0.4 });
+    const cols = [0xf5a524, 0xef4f6b, 0x9d7bff, 0x49c96d];
+    for (let i = 0; i < N; i++) {
+      const a = i * turn, y = i * step - (N * step) / 2;
+      const ax = Math.cos(a) * radius, az = Math.sin(a) * radius;
+      const bx = Math.cos(a + Math.PI) * radius, bz = Math.sin(a + Math.PI) * radius;
+      const s1 = new THREE.Mesh(sph, matA); s1.position.set(ax, y, az); dna.add(s1);
+      const s2 = new THREE.Mesh(sph, matB); s2.position.set(bx, y, bz); dna.add(s2);
+      const dx = bx - ax, dz = bz - az, len = Math.sqrt(dx * dx + dz * dz);
+      const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, len, 8),
+        new THREE.MeshStandardMaterial({ color: cols[i % cols.length], roughness: 0.5 }));
+      rung.position.set((ax + bx) / 2, y, (az + bz) / 2);
+      rung.rotation.z = Math.PI / 2; rung.rotation.y = -Math.atan2(dz, dx);
+      dna.add(rung);
+    }
+    dna.rotation.z = 0.16; scene.add(dna);
+    canvas.addEventListener("click", () => { window.location.href = "dna.html"; });
+
+    function resize() {
+      const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
+      renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+    resize(); window.addEventListener("resize", resize);
+    (function loop() { requestAnimationFrame(loop); dna.rotation.y += 0.006; renderer.render(scene, camera); })();
+  }
+
+  // ---------- Kamera (Live-Feed, gerahmt) ----------
+  async function startCamera() {
+    const video = document.getElementById("cam");
+    const off = document.getElementById("camoff");
+    const state = document.getElementById("camstate");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      video.srcObject = stream;
+      await video.play();
+      off.style.display = "none";
+      state.textContent = "online";
+    } catch (e) {
+      off.textContent = "Kamera nicht verfügbar — Zugriff erlauben und Seite neu laden.";
+      state.textContent = "offline";
+    }
+  }
+</script>
 </body>
 </html>
