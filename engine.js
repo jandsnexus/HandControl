@@ -203,6 +203,75 @@ function buildLungs() {
   return { group: g, axis: "y", zoom: 7, spin: 0.0035 };
 }
 
+function buildKidney() {
+  const g = new THREE.Group();
+  const mk = (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6, metalness: 0.05 });
+  function bean(sign) {
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.8, 28, 28), mk(0x9c3b2e));
+    body.scale.set(0.62, 1.15, 0.6);
+    body.position.set(sign * 1.1, 0.3, 0);
+    body.rotation.z = sign * -0.22;
+    return body;
+  }
+  const left = bean(-1), right = bean(1);
+  tagPart(left, "kidL", "Linke Niere",
+    "Filtert Abfallstoffe aus dem Blut und bildet Urin. Sitzt meist etwas höher als die rechte Niere.");
+  tagPart(right, "kidR", "Rechte Niere",
+    "Filtert zusammen mit der linken täglich rund 180 Liter Blut. Liegt unter der Leber und daher tiefer.");
+  const um = mk(0xc77a6a);
+  const uL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1.6, 12), um); uL.position.set(-0.7, -0.9, 0); uL.rotation.z = 0.35;
+  const uR = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1.6, 12), um); uR.position.set(0.7, -0.9, 0); uR.rotation.z = -0.35;
+  const bladder = new THREE.Mesh(new THREE.SphereGeometry(0.5, 24, 24), mk(0xd9a14a));
+  bladder.position.set(0, -1.85, 0); bladder.scale.set(1, 0.8, 0.9);
+  const urinary = new THREE.Group(); urinary.add(uL, uR, bladder);
+  tagPart(urinary, "urinary", "Harnleiter & Blase",
+    "Die Harnleiter transportieren den Urin von den Nieren zur Harnblase, wo er bis zum Wasserlassen gesammelt wird.");
+  g.add(left, right, urinary);
+  return { group: g, axis: "y", zoom: 7, spin: 0.004 };
+}
+
+function buildSmallIntestine() {
+  const g = new THREE.Group();
+  const pts = [], loops = 5;
+  for (let i = 0; i <= 150; i++) {
+    const t = i / 150;
+    const ang = t * Math.PI * 2 * loops;
+    const r = 0.95 + 0.28 * Math.sin(t * Math.PI * 9);
+    const x = Math.cos(ang) * r;
+    const z = Math.sin(ang) * r;
+    const y = (t - 0.5) * 2.7 + 0.14 * Math.sin(t * Math.PI * 14);
+    pts.push(new THREE.Vector3(x, y, z));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const tube = new THREE.Mesh(
+    new THREE.TubeGeometry(curve, 320, 0.22, 12, false),
+    new THREE.MeshStandardMaterial({ color: 0xe08a7a, roughness: 0.7 })
+  );
+  tagPart(tube, "small", "Dünndarm",
+    "Rund 6 Meter lang und stark gewunden. Hier wird der Großteil der Nährstoffe aus der Nahrung ins Blut aufgenommen.");
+  g.add(tube);
+  return { group: g, axis: "y", zoom: 7, spin: 0.004 };
+}
+
+function buildLargeIntestine() {
+  const g = new THREE.Group();
+  const p = [
+    new THREE.Vector3(1.2, -1.6, 0), new THREE.Vector3(1.45, -0.5, 0), new THREE.Vector3(1.45, 0.9, 0),
+    new THREE.Vector3(1.2, 1.65, 0), new THREE.Vector3(0, 1.95, 0), new THREE.Vector3(-1.2, 1.65, 0),
+    new THREE.Vector3(-1.45, 0.9, 0), new THREE.Vector3(-1.45, -0.6, 0), new THREE.Vector3(-0.9, -1.6, 0),
+    new THREE.Vector3(-0.2, -2.0, 0)
+  ];
+  const curve = new THREE.CatmullRomCurve3(p);
+  const tube = new THREE.Mesh(
+    new THREE.TubeGeometry(curve, 220, 0.34, 14, false),
+    new THREE.MeshStandardMaterial({ color: 0xc98a5a, roughness: 0.75 })
+  );
+  tagPart(tube, "colon", "Dickdarm",
+    "Bildet den Rahmen um den Dünndarm. Entzieht dem Nahrungsbrei Wasser und Salze und formt den Stuhl. Beginnt rechts unten am Blinddarm.");
+  g.add(tube);
+  return { group: g, axis: "y", zoom: 7, spin: 0.0035 };
+}
+
 function buildCrystal() {
   const g = new THREE.Group();
   const geo = new THREE.IcosahedronGeometry(1.6, 1);
@@ -220,11 +289,14 @@ function buildCrystal() {
 }
 
 const PRESETS = {
-  dna:     { title: "DNA Doppelhelix", subtitle: "Rückgrat · Basenpaare", build: buildDNA },
-  brain:   { title: "Menschliches Gehirn", subtitle: "Großhirn · Kleinhirn · Hirnstamm", build: buildBrainReal },
-  heart:   { title: "Menschliches Herz", subtitle: "Kammern · Vorhöfe · Aorta", build: buildHeart },
-  lungs:   { title: "Menschliche Lunge", subtitle: "Lungenflügel · Atemwege", build: buildLungs },
-  crystal: { title: "Testobjekt", subtitle: "Phase 1 Prototyp", build: buildCrystal }
+  dna:            { title: "DNA Doppelhelix", subtitle: "Rückgrat · Basenpaare", build: buildDNA },
+  brain:          { title: "Menschliches Gehirn", subtitle: "Großhirn · Kleinhirn · Hirnstamm", build: buildBrainReal },
+  heart:          { title: "Menschliches Herz", subtitle: "Kammern · Vorhöfe · Aorta", build: buildHeart },
+  lungs:          { title: "Menschliche Lunge", subtitle: "Lungenflügel · Atemwege", build: buildLungs },
+  kidney:         { title: "Nieren", subtitle: "Niere · Harnleiter · Blase", build: buildKidney },
+  smallintestine: { title: "Dünndarm", subtitle: "Nährstoffaufnahme", build: buildSmallIntestine },
+  largeintestine: { title: "Dickdarm", subtitle: "Wasserentzug · Kolon", build: buildLargeIntestine },
+  crystal:        { title: "Testobjekt", subtitle: "Phase 1 Prototyp", build: buildCrystal }
 };
 
 // ---------------------------------------------------------------------
