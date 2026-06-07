@@ -231,6 +231,8 @@ export function mountViewer(config){
     <button class="ae-btn" id="ae-modebtn">Modus: Schnitt</button>
     <button class="ae-btn active" id="ae-rotbtn">&#8635; Auto-Drehung</button>
     <button class="ae-btn" id="ae-resetbtn">&#8634; Zurücksetzen</button>
+    <button class="ae-btn" id="ae-loadbtn">&#8675; Modell laden</button>
+    <input id="ae-file" type="file" accept=".glb,.gltf" style="display:none">
   </div>
   <div id="ae-legend" class="ae-hud">
     <div><span class="k">Pinch</span> <span class="sep">&#8594;</span> drehen</div>
@@ -275,6 +277,7 @@ export function mountViewer(config){
 
   // --- Inhalt vorbereiten (GLB oder Platzhalter) ---
   function applyContent(obj){
+    group.clear();topParts=[];
     group.add(obj);
     obj.traverse(o=>{
       if(o.isMesh && o.material){
@@ -306,20 +309,13 @@ export function mountViewer(config){
     return wrap;
   }
 
-  if(modelUrl){
-    const loader=new GLTFLoader();
-    const draco=new DRACOLoader();
-    draco.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/");
-    loader.setDRACOLoader(draco);
-    spin=0.004;defaultZoom=7;
-    loader.load(modelUrl,
-      gltf=>{ applyContent(fitModel(gltf.scene)); },
-      undefined,
-      err=>{ console.warn("GLB nicht gefunden ("+modelUrl+") — nutze Platzhalter.",err); applyContent(buildPlaceholder()); }
-    );
-  } else {
-    applyContent(buildPlaceholder());
-  }
+  const gltfLoader=new GLTFLoader();
+  const draco=new DRACOLoader();
+  draco.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/");
+  gltfLoader.setDRACOLoader(draco);
+  function showLoader(t){const l=document.getElementById("ae-load");l.classList.remove("gone");document.getElementById("ae-loadtxt").textContent=t||"lädt Modell…";}
+  function loadFromURL(url){showLoader();spin=0.004;defaultZoom=7;gltfLoader.load(url,g=>applyContent(fitModel(g.scene)),undefined,err=>{console.warn("GLB nicht gefunden ("+url+") — Platzhalter.",err);applyContent(buildPlaceholder());});}
+  function loadFromBuffer(buf){showLoader();spin=0.004;defaultZoom=7;try{gltfLoader.parse(buf,"",g=>{applyContent(fitModel(g.scene));setTimeout(()=>openPanel({partId:null,label:preset.title,info:preset.intro,overview:true}),300);},err=>{console.error(err);document.getElementById("ae-load").classList.add("gone");alert("Modell konnte nicht geladen werden. Versuch ein anderes .glb.");});}catch(e){console.error(e);document.getElementById("ae-load").classList.add("gone");alert("Modell konnte nicht geladen werden. Versuch ein anderes .glb.");}}
 
   // --- gemeinsamer Eingabe-Zustand ---
   let targetRotX=0,targetRotY=0,targetZoom=7;
@@ -327,6 +323,16 @@ export function mountViewer(config){
   let autoRotate=true,interacting=false;
   let openMode="cut";          // "cut" | "explode"
   let targetOpen=0,curOpen=0;   // 0..1
+
+  // Inhalt jetzt laden (nach den Zustands-Variablen — wichtig!)
+  if(modelUrl)loadFromURL(modelUrl);else applyContent(buildPlaceholder());
+
+  // eigenes Modell laden: Button + Drag & Drop
+  const fileInput=document.getElementById("ae-file");
+  document.getElementById("ae-loadbtn").addEventListener("click",()=>fileInput.click());
+  fileInput.addEventListener("change",e=>{const f=e.target.files[0];if(f)f.arrayBuffer().then(loadFromBuffer);});
+  window.addEventListener("dragover",e=>{e.preventDefault();});
+  window.addEventListener("drop",e=>{e.preventDefault();const f=e.dataTransfer&&e.dataTransfer.files[0];if(f&&/\.(glb|gltf)$/i.test(f.name))f.arrayBuffer().then(loadFromBuffer);else if(f)alert("Bitte eine .glb- oder .gltf-Datei verwenden.");});
 
   // Maus
   let dragging=false,lastMX=0,lastMY=0,moved=0;
