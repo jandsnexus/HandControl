@@ -7,19 +7,424 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{--bg:#070b0f;--bg2:#0d141b;--accent:#2dd4bf;--accent-dim:#155e57;--text:#e6f1ef;--text-dim:#6b8a86;--warn:#f5a524;--line:rgba(45,212,191,.18)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace}
+  #scene{position:fixed;inset:0;z-index:1}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,rgba(45,212,191,.10),transparent 55%),radial-gradient(circle at 80% 90%,rgba(124,156,255,.06),transparent 55%)}
+  .hud{position:fixed;z-index:10;pointer-events:none}
+  #top{top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 22px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .back{pointer-events:auto;text-decoration:none;color:var(--text-dim);font-size:18px;border:1px solid var(--line);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:.2s}
+  .back:hover{color:var(--accent);border-color:var(--accent)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--text-dim);transition:.3s}
+  .dot.live{background:var(--accent);box-shadow:0 0 12px 1px var(--accent);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .brand h1{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+  .brand span{font-size:11px;color:var(--text-dim);letter-spacing:1px}
+  #status{font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:right;line-height:1.6}
+  #status b{color:var(--accent);font-weight:500}
+  #legend{bottom:20px;left:22px;font-size:11px;color:var(--text-dim);line-height:1.9;letter-spacing:.5px}
+  #legend .k{color:var(--text)} #legend .sep{color:var(--accent-dim)}
+  #cam{bottom:20px;right:22px;width:200px;height:150px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2)}
+  #cam.hidden{display:none}
+  #video,#overlay{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1)}
+  #video{object-fit:cover}
+  #camlabel{position:absolute;top:6px;left:8px;z-index:2;font-size:9px;letter-spacing:1px;color:var(--accent);text-shadow:0 0 6px var(--bg)}
+  #tools{top:64px;right:22px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .btn{pointer-events:auto;font-family:inherit;font-size:11px;letter-spacing:1px;color:var(--text);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;white-space:nowrap}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.active{border-color:var(--accent);color:var(--accent)}
+  #panel{position:fixed;z-index:12;top:50%;right:22px;transform:translateY(-50%);width:300px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px;opacity:0;pointer-events:none;transition:opacity .25s}
+  #panel.show{opacity:1;pointer-events:auto}
+  #panel .ph{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  #panel .ph .pdot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
+  #panel .ph.ov .pdot{background:var(--accent)}
+  #panel h3{font-size:15px;font-weight:700}
+  #panel .pinfo{font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px}
+  #note-wrap label{font-size:10px;letter-spacing:1px;color:var(--accent);text-transform:uppercase}
+  #panel textarea{width:100%;margin-top:6px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px;resize:vertical;min-height:60px}
+  #panel textarea:focus{outline:none;border-color:var(--accent)}
+  #pclose{position:absolute;top:12px;right:14px;cursor:pointer;color:var(--text-dim);background:none;border:none;font-size:18px;font-family:inherit}
+  #pclose:hover{color:var(--text)}
+  #saved{font-size:10px;color:var(--accent);margin-top:6px;height:12px;letter-spacing:1px}
+  #info{position:fixed;z-index:12;top:50%;left:22px;transform:translateY(-50%);width:256px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+  #info.show{opacity:1;pointer-events:auto}
+  #info h4{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+  #spiro{width:100%;height:70px;display:block;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+  #info .rate{font-size:11px;color:var(--text-dim);margin:6px 0 10px;letter-spacing:1px}
+  #info .rate b{color:var(--text)}
+  #info .facts{font-size:11px;color:var(--text-dim);line-height:1.7}
+  #info .facts div{padding:3px 0;border-bottom:1px solid rgba(45,212,191,.07);display:flex;justify-content:space-between;gap:10px}
+  #info .facts b{color:var(--text);text-align:right}
+  #iclose{position:absolute;top:10px;right:12px;cursor:pointer;color:var(--text-dim);background:none;border:none;font-size:18px;font-family:inherit}
+  #iclose:hover{color:var(--text)}
+  #gate{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px;background:radial-gradient(circle at 50% 40%,rgba(13,20,27,.6),var(--bg));backdrop-filter:blur(2px)}
+  #gate.gone{opacity:0;pointer-events:none;transition:opacity .6s}
+  #gate h2{font-size:22px;font-weight:700}
+  #gate p{font-size:13px;color:var(--text-dim);max-width:440px;line-height:1.7}
+  #start{pointer-events:auto;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bg);background:var(--accent);border:none;border-radius:8px;padding:14px 34px;cursor:pointer;box-shadow:0 0 30px rgba(45,212,191,.4);transition:.2s}
+  #start:hover{transform:translateY(-2px);box-shadow:0 0 44px rgba(45,212,191,.6)}
+  #skip{pointer-events:auto;background:none;border:none;cursor:pointer;color:var(--text-dim);font-family:inherit;font-size:11px;letter-spacing:1px;text-decoration:underline;text-underline-offset:4px}
+  #skip:hover{color:var(--text)}
+  #err{color:var(--warn);font-size:12px;min-height:16px;max-width:440px}
+  @media(max-width:640px){#cam{width:130px;height:98px}#panel{width:calc(100% - 44px);top:auto;bottom:170px;transform:none}#tools{top:58px;right:12px}#info{left:12px;right:12px;width:auto;top:auto;bottom:170px;transform:none}}
+</style>
+
 <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
 </script>
 </head>
 <body>
+  <div id="scene"></div>
+  <div id="top" class="hud">
+    <div class="brand">
+      <a class="back" href="index.html" title="Übersicht">&#8592;</a>
+      <div class="dot" id="dot"></div>
+      <div><h1>Menschliche Lunge</h1><span>Lungenflügel · Lappen · Bronchialbaum · Zwerchfell</span></div>
+    </div>
+    <div id="status">Kamera: <b id="camstate">aus</b><br>Hände: <b id="handstate">0</b></div>
+  </div>
+  <div id="tools" class="hud">
+    <button class="btn" id="infobtn">&#9432; Überblick</button>
+    <button class="btn" id="openbtn">&#9697; Aufschneiden</button>
+    <button class="btn" id="modebtn">Modus: Schnitt</button>
+    <button class="btn active" id="rotbtn">&#8635; Auto-Drehung</button>
+    <button class="btn active" id="breathbtn">&#9851; Atmung</button>
+    <button class="btn" id="databtn">&#9636; Atemkurve &amp; Fakten</button>
+    <button class="btn" id="resetbtn">&#8634; Zurücksetzen</button>
+  </div>
+  <div id="legend" class="hud">
+    <div><span class="k">Pinch</span> <span class="sep">&#8594;</span> drehen</div>
+    <div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div>
+    <div><span class="k">2 Hände + Pinch</span> <span class="sep">&#8594;</span> aufschneiden</div>
+    <div><span class="k">Klick</span> <span class="sep">&#8594;</span> Struktur-Info</div>
+  </div>
+  <div id="cam" class="hud hidden">
+    <span id="camlabel">LIVE</span>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+  <div id="panel">
+    <button id="pclose">&times;</button>
+    <div class="ph" id="phead"><span class="pdot"></span><h3 id="ptitle"></h3></div>
+    <p class="pinfo" id="pinfo"></p>
+    <div id="note-wrap"><label>Deine Notiz</label>
+      <textarea id="pnote" placeholder="z.B. für die Klausur merken..."></textarea>
+      <div id="saved"></div></div>
+  </div>
+  <div id="info">
+    <button id="iclose">&times;</button>
+    <h4>Atemkurve (Spirometrie)</h4>
+    <canvas id="spiro"></canvas>
+    <div class="rate"><b>12–16</b> Atemzüge/min (Ruhe)</div>
+    <div class="facts">
+      <div><span>Atemfrequenz</span><b>12–16/min</b></div>
+      <div><span>Atemzugvolumen</span><b>~0,5 L</b></div>
+      <div><span>Gesamtkapazität</span><b>~6 L</b></div>
+      <div><span>Alveolen</span><b>~300 Mio.</b></div>
+      <div><span>Austauschfläche</span><b>~70–100 m²</b></div>
+      <div><span>Lappen</span><b>rechts 3 / links 2</b></div>
+    </div>
+  </div>
+  <div id="gate">
+    <h2>Menschliche Lunge</h2>
+    <p>Kamera öffnen und mit der Hand steuern: Pinch zum Drehen, zwei Hände zum Zoomen, zwei gegriffene Hände auseinander zum Aufschneiden. Klick auf eine Struktur zeigt ihre Funktion. Maus & Trackpad gehen immer auch.</p>
+    <button id="start">Kamera starten</button>
+    <button id="skip">Ohne Kamera ansehen (nur Maus)</button>
+    <div id="err"></div>
+  </div>
+
 <script type="module">
-  import { mountViewer } from "./engine.js";
-  mountViewer({ preset: "lungs" });
+import * as THREE from "three";
+import { HandLandmarker, FilesetResolver }
+  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12";
+
+/* =====================================================================
+   1) One-Euro-Filter
+   ===================================================================== */
+class LowPass { constructor(){this.s=null;} filter(x,a){this.s=(this.s===null)?x:a*x+(1-a)*this.s;return this.s;} }
+class OneEuro {
+  constructor(minCutoff=1.2,beta=0.02,dCutoff=1.0){this.minCutoff=minCutoff;this.beta=beta;this.dCutoff=dCutoff;this.xPrev=null;this.tPrev=null;this.xF=new LowPass();this.dxF=new LowPass();}
+  alpha(c,dt){const tau=1/(2*Math.PI*c);return 1/(1+tau/dt);}
+  filter(x,t){if(this.tPrev===null){this.tPrev=t;this.xPrev=x;return x;}let dt=(t-this.tPrev)/1000;if(dt<=0)dt=1/60;const dx=(x-this.xPrev)/dt;const edx=this.dxF.filter(dx,this.alpha(this.dCutoff,dt));const cutoff=this.minCutoff+this.beta*Math.abs(edx);const fx=this.xF.filter(x,this.alpha(cutoff,dt));this.xPrev=x;this.tPrev=t;return fx;}
+}
+
+/* =====================================================================
+   2) Hilfen
+   ===================================================================== */
+function tagPart(obj,id,label,info){obj.traverse(o=>{o.userData.part={partId:id,label,info};});obj.userData.part={partId:id,label,info};return obj;}
+
+/* =====================================================================
+   3) DIE LUNGE — geformte Lungenflügel + Bronchialbaum + Zwerchfell
+   Ausrichtung: Vorderansicht. +Z = vorne, +Y = oben, +X = (Patienten-)links.
+   ===================================================================== */
+function buildLungs(){
+  const g=new THREE.Group();
+  const C={lung:0xd98a8f,lungDark:0x9c5a60,bronch:0xddc9a8,trachea:0xcdb89a,
+           dia:0xc46a63,artery:0x4f63c4,vein:0xc24a48};
+  const mk=(c,rough=0.7)=>new THREE.MeshStandardMaterial({color:c,roughness:rough,metalness:0.03});
+  const V=a=>new THREE.Vector3(a[0],a[1],a[2]);
+  const tube=(pts,r,c,rough=0.55)=>{const curve=new THREE.CatmullRomCurve3(pts.map(V));return new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(20,pts.length*12),r,10,false),mk(c,rough));};
+
+  /* ---------- GEFORMTER LUNGENFLÜGEL ----------
+     Kugel -> Lungenform: oben spitz (Apex), Innenseite (medial) abgeflacht,
+     mit Hilus-Delle; links zusätzlich die Herzkerbe (cardiac notch).
+     Fissuren (Lappengrenzen) werden über Vertex-Farben dunkel angedeutet.  */
+  function sculptLung(isLeft){
+    const geo=new THREE.SphereGeometry(1,120,90);
+    const pos=geo.attributes.position;
+    const n=new THREE.Vector3();
+    const colors=[];
+    const base=new THREE.Color(C.lung), dark=new THREE.Color(C.lungDark);
+    const ms=isLeft?-1:1;
+    for(let i=0;i<pos.count;i++){
+      n.set(pos.getX(i),pos.getY(i),pos.getZ(i)).normalize();
+      const nx=n.x,ny=n.y,nz=n.z;
+      const up=Math.max(0,ny);
+      let r=1.0;
+      r*=1-0.32*Math.pow(up,1.7);
+      const med=Math.max(0,n.x*ms*-1);
+      r-=0.30*Math.pow(med,1.4);
+      const hil=Math.exp(-(Math.pow((med-0.8)/0.3,2)+Math.pow(ny/0.32,2)+Math.pow(nz/0.45,2)));
+      r-=0.16*hil;
+      let notchShade=0;
+      if(isLeft){
+        const cn=Math.exp(-(Math.pow((med-0.55)/0.4,2)+Math.pow((nz-0.5)/0.4,2)+Math.pow((ny+0.4)/0.4,2)));
+        r-=0.22*cn; notchShade=cn;
+      }
+      r+=0.018*Math.sin(nx*16)*Math.cos(ny*14)*Math.sin(nz*16);
+      let x=n.x*r*0.82, y=n.y*r*1.4, z=n.z*r*0.78;
+      const lower=Math.max(0,-ny);
+      y+=0.22*lower;
+      pos.setXYZ(i,x,y,z);
+      const obl=Math.exp(-Math.pow((ny-(-nz*0.8+0.05))/0.10,2));
+      const hor=isLeft?0:Math.exp(-Math.pow((ny-0.2)/0.07,2))*Math.max(0,nz);
+      const shade=Math.min(0.8,Math.max(obl*0.9,hor*0.9,notchShade*0.6));
+      const col=base.clone().lerp(dark,shade);
+      colors.push(col.r,col.g,col.b);
+    }
+    geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+    geo.computeVertexNormals();
+    return new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.72,metalness:0.03}));
+  }
+
+  const leftLung=sculptLung(true);  leftLung.position.set(1.55,0,0);
+  const rightLung=sculptLung(false);rightLung.position.set(-1.65,0.05,0); rightLung.scale.set(1.08,1.05,1.08);
+  tagPart(leftLung,"lungL","Linker Lungenflügel","Etwas kleiner als der rechte — die Herzkerbe (cardiac notch) macht Platz fürs Herz. Hat nur zwei Lappen (Ober- und Unterlappen), getrennt durch die schräge Fissur. Der vorspringende Teil heißt Lingula.");
+  tagPart(rightLung,"lungR","Rechter Lungenflügel","Der größere Flügel mit drei Lappen (Ober-, Mittel- und Unterlappen), getrennt durch eine schräge und eine waagerechte Fissur. Hier findet ein Großteil des Gasaustauschs statt.");
+
+  /* ---------- LUFTRÖHRE + BRONCHIALBAUM ---------- */
+  const airways=new THREE.Group();
+  const trachea=tube([[0,2.7,0],[0,2.2,0],[0,1.75,0]],0.16,C.trachea,0.5);
+  for(let y=1.85;y<2.6;y+=0.16){const ring=new THREE.Mesh(new THREE.TorusGeometry(0.17,0.025,8,20),mk(C.trachea,0.5));ring.position.set(0,y,0);ring.rotation.x=Math.PI/2;airways.add(ring);}
+  airways.add(trachea);
+  const mainL=tube([[0,1.75,0],[0.5,1.5,0],[1.0,1.25,0.05]],0.11,C.bronch);
+  const mainR=tube([[0,1.75,0],[-0.5,1.5,0],[-1.0,1.3,0.05]],0.11,C.bronch);
+  airways.add(mainL,mainR);
+  const _ax=new THREE.Vector3(0,0,1);
+  function grow(start,dir,len,rad,depth){
+    const end=start.clone().add(dir.clone().multiplyScalar(len));
+    const mid=start.clone().add(end).multiplyScalar(0.5);
+    airways.add(tube([[start.x,start.y,start.z],[mid.x,mid.y,mid.z],[end.x,end.y,end.z]],rad,C.bronch));
+    if(depth<=0)return;
+    for(const s of [-1,1]){
+      const nd=dir.clone().applyAxisAngle(_ax,s*0.55).add(new THREE.Vector3(0,-0.25,s*0.12)).normalize();
+      grow(end,nd,len*0.72,rad*0.7,depth-1);
+    }
+  }
+  grow(new THREE.Vector3(1.0,1.25,0.05),new THREE.Vector3(0.25,-0.6,0.1).normalize(),0.7,0.07,4);
+  grow(new THREE.Vector3(-1.0,1.3,0.05),new THREE.Vector3(-0.25,-0.6,0.1).normalize(),0.75,0.075,4);
+  tagPart(airways,"airways","Luftröhre & Bronchialbaum","Die Luftröhre (mit ihren hufeisenförmigen Knorpelspangen) teilt sich in den linken und rechten Hauptbronchus. Diese verzweigen sich im Inneren immer feiner — über ~23 Generationen bis zu den winzigen Bronchiolen und Alveolen, wo der Gasaustausch stattfindet.");
+
+  /* ---------- LUNGENGEFÄSSE am Hilus ---------- */
+  const pa=tube([[-0.2,1.45,0.2],[-0.7,1.3,0.2],[-1.05,1.25,0.1]],0.07,C.artery);
+  const pvv=tube([[1.05,1.1,0.1],[0.7,1.0,0.2],[0.3,1.1,0.25]],0.06,C.vein);
+  const vessels=new THREE.Group(); vessels.add(pa,pvv);
+  tagPart(vessels,"vessels","Lungengefäße","Die Lungenarterie (blau) bringt sauerstoffarmes Blut vom Herzen in die Lunge, die Lungenvenen (rot) führen das frisch mit Sauerstoff beladene Blut zurück. An den Alveolen findet der eigentliche Gasaustausch statt.");
+
+  /* ---------- ZWERCHFELL ---------- */
+  const dm=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),mk(C.dia,0.7));
+  dm.scale.set(2.7,0.95,1.7); dm.position.set(0,-2.55,0);
+  tagPart(dm,"diaphragm","Zwerchfell (Diaphragma)","Der kuppelförmige Atemmuskel unter der Lunge. Beim Einatmen zieht es sich zusammen und flacht ab — das vergrößert den Brustraum und saugt Luft ein. Beim Ausatmen erschlafft es und wölbt sich wieder nach oben.");
+
+  g.add(leftLung,rightLung,airways,vessels,dm);
+  return {group:g,zoom:11,spin:0.003};
+}
+
+const INTRO="Die Lunge versorgt das Blut mit Sauerstoff und gibt Kohlendioxid ab. Sie besteht aus zwei Flügeln — rechts mit drei, links mit zwei Lappen (Platz fürs Herz). Über den Bronchialbaum gelangt die Luft bis in rund 300 Millionen Alveolen mit einer Austauschfläche von etwa einem Tennisplatz. Klick die Strukturen an oder schneide die Lunge auf, um den Bronchialbaum im Inneren zu sehen.";
+
+/* =====================================================================
+   4) VIEWER
+   ===================================================================== */
+const sceneEl=document.getElementById("scene");
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.localClippingEnabled=true;
+sceneEl.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,100);
+scene.add(new THREE.AmbientLight(0x99ffee,0.6));
+const key=new THREE.DirectionalLight(0xffffff,1.4);key.position.set(4,5,6);scene.add(key);
+const fill=new THREE.DirectionalLight(0xbfe9ff,0.5);fill.position.set(-5,2,-4);scene.add(fill);
+const rim=new THREE.PointLight(0x7c9cff,1.4,40);rim.position.set(-6,-3,4);scene.add(rim);
+
+const group=new THREE.Group();scene.add(group);
+const clipPlane=new THREE.Plane(new THREE.Vector3(0,0,-1),5);
+
+let targetRotX=0,targetRotY=0;
+const ZOOM_MIN=5,ZOOM_MAX=20;
+let autoRotate=true,breathing=true,interacting=false;
+let openMode="cut";
+let targetOpen=0,curOpen=0;
+
+const built=buildLungs();
+const spin=built.spin, defaultZoom=built.zoom;
+let targetZoom=defaultZoom;
+camera.position.set(0,0,defaultZoom);
+group.add(built.group);
+group.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.side=THREE.DoubleSide;m.clippingPlanes=[clipPlane];m.clipShadows=true;});}});
+const topParts=built.group.children.filter(c=>c.userData&&c.userData.part).map(c=>({obj:c,base:c.position.clone()}));
+
+let dragging=false,lastMX=0,lastMY=0,moved=0;
+renderer.domElement.addEventListener("pointerdown",e=>{dragging=true;moved=0;lastMX=e.clientX;lastMY=e.clientY;});
+window.addEventListener("pointerup",e=>{if(dragging&&moved<6)tryPick(e.clientX,e.clientY);dragging=false;});
+window.addEventListener("pointermove",e=>{if(!dragging)return;moved+=Math.abs(e.clientX-lastMX)+Math.abs(e.clientY-lastMY);interacting=true;targetRotY+=(e.clientX-lastMX)*0.006;targetRotX+=(e.clientY-lastMY)*0.006;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastMX=e.clientX;lastMY=e.clientY;});
+renderer.domElement.addEventListener("wheel",e=>{e.preventDefault();interacting=true;targetZoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,targetZoom+e.deltaY*0.006));},{passive:false});
+
+const rotBtn=document.getElementById("rotbtn");
+rotBtn.addEventListener("click",()=>{autoRotate=!autoRotate;rotBtn.classList.toggle("active",autoRotate);});
+const breathBtn=document.getElementById("breathbtn");
+breathBtn.addEventListener("click",()=>{breathing=!breathing;breathBtn.classList.toggle("active",breathing);if(!breathing)group.scale.setScalar(1);});
+document.getElementById("resetbtn").addEventListener("click",()=>{targetRotX=0;targetRotY=0;targetZoom=defaultZoom;targetOpen=0;});
+const openBtn=document.getElementById("openbtn");
+openBtn.addEventListener("click",()=>{targetOpen=targetOpen>0.05?0:1;openBtn.classList.toggle("active",targetOpen>0.05);});
+const modeBtn=document.getElementById("modebtn");
+modeBtn.addEventListener("click",()=>{openMode=openMode==="cut"?"explode":"cut";modeBtn.textContent="Modus: "+(openMode==="cut"?"Schnitt":"Teile");});
+
+const raycaster=new THREE.Raycaster();const mouse=new THREE.Vector2();
+const panel=document.getElementById("panel");
+const pTitle=document.getElementById("ptitle"),pInfo=document.getElementById("pinfo");
+const pNote=document.getElementById("pnote"),pSaved=document.getElementById("saved");
+const pHead=document.getElementById("phead"),noteWrap=document.getElementById("note-wrap");
+let currentPartId=null;
+function tryPick(x,y){mouse.x=(x/window.innerWidth)*2-1;mouse.y=-(y/window.innerHeight)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(group.children,true);for(const h of hits){let o=h.object;while(o&&!(o.userData&&o.userData.part))o=o.parent;if(o&&o.userData.part){openPanel(o.userData.part);return;}}}
+function noteKey(id){return "anote:lungs:"+id;}
+function openPanel(part){
+  currentPartId=part.partId;pTitle.textContent=part.label;pInfo.textContent=part.info;
+  if(part.overview){pHead.classList.add("ov");noteWrap.style.display="none";}
+  else{pHead.classList.remove("ov");noteWrap.style.display="block";let s="";try{s=localStorage.getItem(noteKey(part.partId))||"";}catch(e){}pNote.value=s;pSaved.textContent="";}
+  panel.classList.add("show");
+}
+pNote.addEventListener("input",()=>{if(!currentPartId)return;try{localStorage.setItem(noteKey(currentPartId),pNote.value);pSaved.textContent="gespeichert";}catch(e){pSaved.textContent="speichern nicht möglich";}});
+document.getElementById("pclose").addEventListener("click",()=>panel.classList.remove("show"));
+document.getElementById("infobtn").addEventListener("click",()=>openPanel({partId:null,label:"Menschliche Lunge",info:INTRO,overview:true}));
+setTimeout(()=>openPanel({partId:null,label:"Menschliche Lunge",info:INTRO,overview:true}),400);
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(autoRotate&&!interacting)targetRotY+=spin;
+  group.rotation.x+=(targetRotX-group.rotation.x)*0.12;
+  group.rotation.y+=(targetRotY-group.rotation.y)*0.12;
+  camera.position.z+=(targetZoom-camera.position.z)*0.12;
+  curOpen+=(targetOpen-curOpen)*0.12;
+  const _v=new THREE.Vector3();
+  if(openMode==="cut"){clipPlane.constant=5-curOpen*6.0;topParts.forEach(p=>p.obj.position.copy(p.base));}
+  else{clipPlane.constant=5;topParts.forEach(p=>{const dir=p.base.length()>0.001?_v.copy(p.base).normalize():_v.set(0,1,0);p.obj.position.copy(p.base).add(dir.multiplyScalar(curOpen*1.6));});}
+  if(breathing){const t=performance.now()/1000;const ph=(t/4)%1;const b=0.5-0.5*Math.cos(ph*2*Math.PI);group.scale.set(1+0.05*b,1+0.035*b,1+0.05*b);}
+  interacting=false;
+  renderer.render(scene,camera);
+}
+animate();
+window.addEventListener("resize",()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+
+/* ---- Daten-Panel: Atemkurve ---- */
+const infoPanel=document.getElementById("info");
+document.getElementById("databtn").addEventListener("click",()=>infoPanel.classList.toggle("show"));
+document.getElementById("iclose").addEventListener("click",()=>infoPanel.classList.remove("show"));
+(function spiro(){
+  const c=document.getElementById("spiro");const x=c.getContext("2d");
+  function fit(){c.width=c.clientWidth||240;c.height=c.clientHeight||70;}
+  fit();window.addEventListener("resize",fit);
+  const data=[];let phase=0;
+  function draw(){
+    requestAnimationFrame(draw);
+    const w=c.width,h=c.height;phase+=0.004;
+    const val=0.5-0.5*Math.cos((phase%1)*2*Math.PI);
+    data.push(val);while(data.length>w)data.shift();
+    x.clearRect(0,0,w,h);
+    x.strokeStyle="rgba(45,212,191,.07)";x.lineWidth=1;
+    for(let gx=0;gx<w;gx+=14){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,h);x.stroke();}
+    x.strokeStyle="#2dd4bf";x.lineWidth=2;x.beginPath();
+    for(let i=0;i<data.length;i++){const yy=h-6-data[i]*(h-12);if(i===0)x.moveTo(0,yy);else x.lineTo(i,yy);}
+    x.stroke();
+  }
+  draw();
+})();
+
+/* =====================================================================
+   5) HAND-TRACKING
+   ===================================================================== */
+const video=document.getElementById("video"),overlay=document.getElementById("overlay"),octx=overlay.getContext("2d");
+const camState=document.getElementById("camstate"),handState=document.getElementById("handstate"),dot=document.getElementById("dot"),errEl=document.getElementById("err");
+let handLandmarker=null,lastVideoTime=-1,pinching=false,lastPX=0,lastPY=0,twoStartDist=null,twoStartZoom=null,openStartDist=null,openStartVal=null;
+const fPX=new OneEuro(),fPY=new OneEuro(),fDist=new OneEuro(1.0,0.01),fOpen=new OneEuro(1.0,0.01);
+const CONN=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+const d2=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+async function startCamera(){
+  errEl.textContent="";
+  try{
+    const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm");
+    handLandmarker=await HandLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numHands:2});
+    const stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:"user"}});
+    video.srcObject=stream;await video.play();
+    overlay.width=video.videoWidth||640;overlay.height=video.videoHeight||480;
+    document.getElementById("cam").classList.remove("hidden");camState.textContent="an";dot.classList.add("live");detectLoop();
+  }catch(e){console.error(e);errEl.textContent="Kamera/Modell-Fehler: "+(e.message||e);}
+}
+function detectLoop(){if(handLandmarker&&video.readyState>=2&&video.currentTime!==lastVideoTime){lastVideoTime=video.currentTime;handleHands(handLandmarker.detectForVideo(video,performance.now()));}requestAnimationFrame(detectLoop);}
+function handleHands(res){
+  const hands=res.landmarks||[];handState.textContent=hands.length;
+  octx.clearRect(0,0,overlay.width,overlay.height);octx.strokeStyle="rgba(45,212,191,.7)";octx.fillStyle="#aef7ec";octx.lineWidth=2;
+  for(const lm of hands){for(const [a,b] of CONN){octx.beginPath();octx.moveTo(lm[a].x*overlay.width,lm[a].y*overlay.height);octx.lineTo(lm[b].x*overlay.width,lm[b].y*overlay.height);octx.stroke();}for(const p of lm){octx.beginPath();octx.arc(p.x*overlay.width,p.y*overlay.height,3,0,6.28);octx.fill();}}
+  const now=performance.now();
+  if(hands.length>=2){
+    pinching=false;
+    const sizeA=Math.max(d2(hands[0][0],hands[0][9]),1e-4),sizeB=Math.max(d2(hands[1][0],hands[1][9]),1e-4);
+    const pinA=d2(hands[0][4],hands[0][8])/sizeA,pinB=d2(hands[1][4],hands[1][8])/sizeB;
+    const wristDist=d2(hands[0][0],hands[1][0]);
+    if(pinA<0.45&&pinB<0.45){
+      twoStartDist=null;const d=fOpen.filter(wristDist,now);
+      if(openStartDist===null){openStartDist=d;openStartVal=targetOpen;}
+      interacting=true;targetOpen=Math.max(0,Math.min(1,openStartVal+(d-openStartDist)*2.2));
+      if(targetOpen>0.05)openBtn.classList.add("active");else openBtn.classList.remove("active");
+    } else {
+      openStartDist=null;const d=fDist.filter(wristDist,now);
+      if(twoStartDist===null){twoStartDist=d;twoStartZoom=targetZoom;}
+      interacting=true;targetZoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,twoStartZoom*(twoStartDist/Math.max(d,1e-4))));
+    }
+    return;
+  }
+  twoStartDist=null;openStartDist=null;
+  if(hands.length===1){
+    const lm=hands[0];const handSize=Math.max(d2(lm[0],lm[9]),1e-4);const ratio=d2(lm[4],lm[8])/handSize;
+    const px=fPX.filter(1-(lm[4].x+lm[8].x)/2,now),py=fPY.filter((lm[4].y+lm[8].y)/2,now);
+    if(!pinching&&ratio<0.40){pinching=true;lastPX=px;lastPY=py;}
+    else if(pinching&&ratio>0.55){pinching=false;}
+    if(pinching){interacting=true;targetRotY+=(px-lastPX)*5.0;targetRotX+=(py-lastPY)*5.0;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastPX=px;lastPY=py;}
+    return;
+  }
+  pinching=false;
+}
+
+const gate=document.getElementById("gate"),startBtn=document.getElementById("start");
+document.getElementById("skip").addEventListener("click",()=>gate.classList.add("gone"));
+startBtn.addEventListener("click",async()=>{startBtn.disabled=true;startBtn.textContent="lädt…";await startCamera();if(!errEl.textContent)gate.classList.add("gone");startBtn.disabled=false;startBtn.textContent="Kamera starten";});
 </script>
 </body>
 </html>
