@@ -60,18 +60,107 @@ function buildBrain(){
   g.add(L,R,cere,stem);return{group:g,zoom:6,spin:0.003};
 }
 function buildHeart(){
-  const g=new THREE.Group();const mk=c=>new THREE.MeshStandardMaterial({color:c,metalness:0.1,roughness:0.55});
-  const body=new THREE.Mesh(new THREE.SphereGeometry(1.1,32,32),mk(0xc0303a));body.scale.set(1.0,1.15,0.9);body.position.y=-0.2;
-  tagPart(body,"ventricles","Herzkammern (Ventrikel)","Die beiden unteren, muskelstärksten Räume. Die linke Kammer pumpt Blut in den Körper, die rechte in die Lunge.");
-  const aL=new THREE.Mesh(new THREE.SphereGeometry(0.55,24,24),mk(0xd6515a));aL.position.set(-0.5,0.75,0);
-  const aR=new THREE.Mesh(new THREE.SphereGeometry(0.55,24,24),mk(0xd6515a));aR.position.set(0.5,0.75,0);
-  const atria=new THREE.Group();atria.add(aL,aR);
-  tagPart(atria,"atria","Vorhöfe (Atrien)","Die beiden oberen Räume. Sie nehmen zurückströmendes Blut auf und geben es an die Kammern weiter.");
-  const ao=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.32,1.3,20),mk(0xb83b54));ao.position.set(-0.2,1.4,0);ao.rotation.z=0.25;
-  const arch=new THREE.Mesh(new THREE.TorusGeometry(0.35,0.16,16,24,Math.PI),mk(0xb83b54));arch.position.set(0.1,1.9,0);arch.rotation.z=-0.4;
-  const ves=new THREE.Group();ves.add(ao,arch);
-  tagPart(ves,"aorta","Aorta","Die größte Arterie des Körpers. Sie führt sauerstoffreiches Blut aus der linken Kammer in den Kreislauf.");
-  g.add(body,atria,ves);return{group:g,zoom:7,spin:0.004};
+  // Anatomische Ausrichtung: Vorderansicht. +Z = vorne, +Y = oben, +X = (Patienten-)links.
+  const g=new THREE.Group();
+  const C={myo:0x8f2733,myoR:0x9c3540,atrium:0xb24b50,aorta:0xd23b3b,artery:0xe8403c,
+           pulm:0x4f63c4,vein:0x4a6fb0,pulmVein:0xc24a48,coroVein:0x7d5fae,valve:0xe9e2cf,fat:0xe8c98f};
+  const mk=(c,rough=0.62)=>new THREE.MeshStandardMaterial({color:c,roughness:rough,metalness:0.04});
+  const ell=(rx,ry,rz,c)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),mk(c));m.scale.set(rx,ry,rz);return m;};
+  const V=a=>new THREE.Vector3(a[0],a[1],a[2]);
+  const tube=(pts,r,c,rough=0.5)=>{const curve=new THREE.CatmullRomCurve3(pts.map(V));return new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(24,pts.length*14),r,12,false),mk(c,rough));};
+
+  // ---------- KAMMERN (Ventrikel) ----------
+  const lv=ell(0.95,1.35,0.95,C.myo); lv.position.set(0.35,-0.35,-0.05); lv.rotation.z=0.16;        // linke Kammer -> Apex
+  const rv=ell(0.92,1.15,0.78,C.myoR); rv.position.set(-0.5,-0.1,0.42); rv.rotation.z=-0.12;          // rechte Kammer (vorne)
+  const ventricles=new THREE.Group(); ventricles.add(lv,rv);
+  tagPart(ventricles,"ventricles","Herzkammern (Ventrikel)","Die beiden unteren, muskelstärksten Räume. Die linke Kammer (dickere Wand) pumpt sauerstoffreiches Blut über die Aorta in den ganzen Körper, die rechte Kammer pumpt sauerstoffarmes Blut in die Lunge. Ihre Spitze bildet den Apex des Herzens.");
+
+  // ---------- VORHÖFE (Atrien) ----------
+  const la=ell(0.62,0.6,0.62,C.atrium); la.position.set(0.55,0.95,-0.5);
+  const laApp=ell(0.3,0.26,0.36,C.atrium); laApp.position.set(0.7,0.75,0.25);  // linkes Herzohr (Auricula)
+  const leftAtrium=new THREE.Group(); leftAtrium.add(la,laApp);
+  tagPart(leftAtrium,"la","Linker Vorhof","Nimmt das sauerstoffreiche Blut aus den vier Lungenvenen auf und leitet es durch die Mitralklappe in die linke Kammer. Das ausgestülpte linke Herzohr (Auricula) liegt vorne auf.");
+  const ra=ell(0.66,0.66,0.62,C.atrium); ra.position.set(-0.8,0.7,0.05);
+  const raApp=ell(0.3,0.28,0.34,C.atrium); raApp.position.set(-0.55,0.85,0.45);
+  const rightAtrium=new THREE.Group(); rightAtrium.add(ra,raApp);
+  tagPart(rightAtrium,"ra","Rechter Vorhof","Sammelt das sauerstoffarme Blut aus dem Körper (über obere und untere Hohlvene) und gibt es durch die Trikuspidalklappe an die rechte Kammer weiter. Enthält den Sinusknoten — den natürlichen Taktgeber des Herzens.");
+
+  // ---------- AORTA + Bogen + Abgänge ----------
+  const aorta=tube([[0.05,0.55,-0.05],[0.05,1.3,-0.1],[0.05,1.95,-0.15],[0.2,2.35,-0.25],[0.55,2.4,-0.55],[0.6,2.0,-0.95],[0.55,1.0,-1.05],[0.55,0.2,-1.05]],0.24,C.aorta);
+  const bc=tube([[0.18,2.32,-0.28],[0.0,2.85,-0.2],[-0.15,3.2,-0.15]],0.09,C.aorta);   // Truncus brachiocephalicus
+  const lcc=tube([[0.35,2.4,-0.4],[0.4,2.95,-0.4],[0.42,3.3,-0.4]],0.075,C.aorta);       // linke Halsschlagader
+  const lsc=tube([[0.52,2.36,-0.5],[0.7,2.85,-0.55],[0.8,3.15,-0.6]],0.075,C.aorta);      // linke Schlüsselbeinarterie
+  const aortaGrp=new THREE.Group(); aortaGrp.add(aorta,bc,lcc,lsc);
+  tagPart(aortaGrp,"aorta","Aorta (Hauptschlagader)","Die größte Arterie des Körpers. Sie steigt aus der linken Kammer auf (Aorta ascendens), bildet den Aortenbogen und führt sauerstoffreiches Blut in den Kreislauf. Vom Bogen zweigen drei Gefäße ab: Truncus brachiocephalicus, linke Halsschlagader und linke Schlüsselbeinarterie.");
+
+  // ---------- LUNGENARTERIENSTAMM (Truncus pulmonalis) ----------
+  const pt=tube([[-0.45,0.55,0.45],[-0.3,1.2,0.25],[-0.1,1.7,-0.05],[0.0,1.9,-0.25]],0.22,C.pulm);
+  const rpa=tube([[0.0,1.9,-0.25],[-0.5,1.85,-0.4],[-1.0,1.7,-0.5]],0.12,C.pulm);  // rechte Lungenarterie
+  const lpa=tube([[0.0,1.9,-0.25],[0.5,1.9,-0.45],[0.95,1.7,-0.6]],0.12,C.pulm);   // linke Lungenarterie
+  const pulmGrp=new THREE.Group(); pulmGrp.add(pt,rpa,lpa);
+  tagPart(pulmGrp,"pulmonary","Lungenarterienstamm","Führt das sauerstoffarme Blut aus der rechten Kammer zur Lunge. Er kreuzt vor der Aorta und teilt sich in die rechte und linke Lungenarterie. Eine der wenigen Arterien, die sauerstoffarmes Blut transportieren.");
+
+  // ---------- HOHLVENEN ----------
+  const svc=tube([[-0.75,2.1,-0.05],[-0.78,1.5,0.0],[-0.8,0.95,0.05]],0.16,C.vein);
+  const ivc=tube([[-0.7,-1.0,-0.2],[-0.72,-0.4,-0.1],[-0.7,0.25,0.0]],0.17,C.vein);
+  const cavae=new THREE.Group(); cavae.add(svc,ivc);
+  tagPart(cavae,"cavae","Obere & untere Hohlvene","Die beiden größten Venen. Die obere Hohlvene (Vena cava superior) bringt das Blut aus Kopf und Armen, die untere (Vena cava inferior) aus Bauch und Beinen — beide münden in den rechten Vorhof.");
+
+  // ---------- LUNGENVENEN (4) ----------
+  const pv=new THREE.Group();
+  [[0.95,1.25,-0.85],[1.05,0.95,-0.95],[0.95,0.65,-0.95],[1.0,1.05,-0.6]].forEach(p=>{pv.add(tube([[p[0],p[1],p[2]],[0.6,p[1]*0.85+0.1,-0.6],[0.5,0.95,-0.5]],0.085,C.pulmVein));});
+  tagPart(pv,"pulmveins","Lungenvenen","Vier Venen, die das in der Lunge mit Sauerstoff angereicherte Blut zurück zum linken Vorhof bringen. Sie sind die einzigen Venen, die sauerstoffreiches Blut führen.");
+
+  // ---------- HERZKRANZARTERIEN ----------
+  // Linke Koronararterie: Hauptstamm -> LAD (vorderer Sulcus) + Diagonaläste
+  const lad=tube([[0.1,0.5,0.3],[0.0,0.1,0.55],[-0.05,-0.5,0.55],[-0.05,-1.15,0.45],[0.0,-1.7,0.3],[0.1,-2.05,0.15]],0.07,C.artery,0.4);
+  const diag1=tube([[-0.02,-0.2,0.55],[0.35,-0.5,0.45],[0.6,-0.85,0.25]],0.045,C.artery,0.4);
+  const diag2=tube([[-0.04,-0.7,0.52],[0.3,-1.0,0.4],[0.5,-1.3,0.2]],0.045,C.artery,0.4);
+  const lmca=tube([[0.05,0.55,0.05],[0.1,0.5,0.3]],0.07,C.artery,0.4);
+  const lca=new THREE.Group(); lca.add(lmca,lad,diag1,diag2);
+  tagPart(lca,"lad","Linke Koronararterie (LAD)","Der Hauptstamm (LMCA) entspringt der Aorta und teilt sich. Der vordere absteigende Ast (LAD / Ramus interventricularis anterior) zieht in der vorderen Furche zur Herzspitze und versorgt die Vorderwand und den größten Teil der Scheidewand. Seine Verstopfung verursacht den klassischen Vorderwandinfarkt.");
+  // Circumflex (linke Kranzfurche -> hinten) + Marginalast
+  const cx=tube([[0.1,0.5,0.3],[0.6,0.55,0.1],[0.95,0.35,-0.25],[0.8,0.15,-0.65],[0.4,0.05,-0.85]],0.06,C.artery,0.4);
+  const om=tube([[0.9,0.4,-0.15],[1.0,-0.1,-0.1],[0.85,-0.6,-0.05]],0.045,C.artery,0.4);
+  const cxGrp=new THREE.Group(); cxGrp.add(cx,om);
+  tagPart(cxGrp,"circumflex","Ramus circumflexus","Der zweite große Ast der linken Koronararterie. Er verläuft in der linken Kranzfurche um die Seitenwand herum nach hinten und versorgt mit seinen Randästen (Rami marginales / obtuse marginal) die Seiten- und Hinterwand der linken Kammer.");
+  // RCA (rechte Kranzfurche) + SA-Knoten-Ast + Marginalast + PDA (hinten)
+  const rca=tube([[-0.15,0.5,0.15],[-0.7,0.5,0.3],[-1.0,0.25,-0.1],[-0.85,0.0,-0.55],[-0.35,-0.05,-0.8]],0.07,C.artery,0.4);
+  const sa=tube([[-0.55,0.55,0.25],[-0.7,0.9,0.1],[-0.75,1.15,0.0]],0.04,C.artery,0.4);
+  const rmarg=tube([[-0.95,0.15,0.05],[-0.85,-0.5,0.2],[-0.5,-1.1,0.25]],0.05,C.artery,0.4);
+  const pda=tube([[-0.35,-0.05,-0.8],[-0.2,-0.7,-0.65],[-0.1,-1.4,-0.45],[-0.02,-1.85,-0.25]],0.055,C.artery,0.4);
+  const rcaGrp=new THREE.Group(); rcaGrp.add(rca,sa,rmarg,pda);
+  tagPart(rcaGrp,"rca","Rechte Koronararterie (RCA)","Entspringt der Aorta und läuft in der rechten Kranzfurche. Sie gibt den Sinusknoten-Ast (versorgt den Taktgeber), den rechten Randast und am Herzkreuz die hintere absteigende Arterie (PDA) ab, die Hinterwand und hinteres Septum versorgt — bei ~80 % der Menschen (Rechtsversorgertyp).");
+
+  // ---------- HERZVENEN ----------
+  const gcv=tube([[0.05,-1.9,0.2],[0.0,-1.0,0.45],[0.1,-0.2,0.5],[0.5,0.45,0.2],[0.9,0.3,-0.3]],0.06,C.coroVein,0.45);
+  const cs=tube([[0.9,0.3,-0.3],[0.4,0.2,-0.75],[-0.2,0.2,-0.8],[-0.6,0.35,-0.5]],0.1,C.coroVein,0.45); // Sinus coronarius -> RA
+  const veinGrp=new THREE.Group(); veinGrp.add(gcv,cs);
+  tagPart(veinGrp,"coronaryveins","Herzvenen & Sinus coronarius","Die große Herzvene (V. cordis magna) begleitet die LAD und sammelt das verbrauchte Blut der Herzmuskulatur. Sie mündet hinten in den Sinus coronarius — eine kurze, weite Vene, die in den rechten Vorhof entleert.");
+
+  // ---------- KLAPPEN (innen, sichtbar beim Aufschneiden) ----------
+  const valves=new THREE.Group();
+  const ring=(x,y,z,r,rot)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(r,0.05,12,28),mk(C.valve,0.4));t.position.set(x,y,z);if(rot)t.rotation.set(rot[0],rot[1],rot[2]);else t.rotation.x=Math.PI/2;return t;};
+  valves.add(ring(-0.4,0.42,0.15,0.2));   // Trikuspidalklappe (RA->RV)
+  valves.add(ring(0.45,0.4,-0.15,0.19));  // Mitralklappe (LA->LV)
+  valves.add(ring(0.05,0.52,-0.05,0.14)); // Aortenklappe
+  valves.add(ring(-0.42,0.6,0.42,0.13));  // Pulmonalklappe
+  tagPart(valves,"valves","Herzklappen","Vier Ventile sorgen für die Einbahnstraße des Blutes: Trikuspidal- und Mitralklappe zwischen Vorhöfen und Kammern, Aorten- und Pulmonalklappe an den Ausgängen zu Aorta und Lungenarterie. Beim Schließen entsteht das typische „Lub-Dub“-Herzgeräusch. (Beim Aufschneiden sichtbar.)");
+
+  // ---------- INNERE STRUKTUREN (sichtbar beim Aufschneiden) ----------
+  const septum=ell(0.13,1.05,0.66,0x7e2230); septum.position.set(-0.05,-0.35,0.12); septum.rotation.z=0.05;
+  tagPart(septum,"septum","Kammerscheidewand (Septum)","Die muskulöse Wand zwischen linker und rechter Kammer. Sie trennt sauerstoffreiches von sauerstoffarmem Blut. Durch ihren oberen, häutigen Teil verläuft das Erregungsleitungssystem. (Beim Aufschneiden sichtbar.)");
+  const papGrp=new THREE.Group();
+  const pap=(x,y,z)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.42,12),mk(C.myoR));m.position.set(x,y,z);return m;};
+  const p1=pap(0.25,-0.75,0.05),p2=pap(0.52,-0.6,-0.15);
+  papGrp.add(p1,p2);
+  // Sehnenfäden (Chordae) von den Papillarmuskeln zur Mitralklappe
+  papGrp.add(tube([[0.25,-0.55,0.05],[0.35,-0.1,-0.05],[0.4,0.35,-0.12]],0.018,C.valve,0.4));
+  papGrp.add(tube([[0.52,-0.4,-0.15],[0.48,-0.0,-0.14],[0.5,0.35,-0.16]],0.018,C.valve,0.4));
+  tagPart(papGrp,"papillary","Papillarmuskeln & Sehnenfäden","Zapfenförmige Muskeln in den Kammern. Über feine Sehnenfäden (Chordae tendineae) halten sie die Segelklappen fest, damit diese beim kräftigen Pumpen nicht in die Vorhöfe zurückschlagen. (Beim Aufschneiden sichtbar.)");
+
+  g.add(ventricles,leftAtrium,rightAtrium,aortaGrp,pulmGrp,cavae,pv,lca,cxGrp,rcaGrp,veinGrp,septum,papGrp,valves);
+  return {group:g,zoom:9,spin:0.0035};
 }
 function buildLungs(){
   const g=new THREE.Group();const mk=c=>new THREE.MeshStandardMaterial({color:c,roughness:0.7});
@@ -131,8 +220,8 @@ const PRESETS = {
     intro:"Die DNA ist der Bauplan des Lebens. In jeder Zelle liegt sie als verdrillte Doppelhelix vor. Die Abfolge der vier Basen (A, T, G, C) speichert alle Erbinformationen."},
   brain:{title:"Menschliches Gehirn",subtitle:"Großhirn · Kleinhirn · Hirnstamm",build:buildBrain,model:"models/brain.glb",
     intro:"Das Gehirn ist die Steuerzentrale des Körpers. Es wiegt rund 1,3 kg und besitzt etwa 86 Milliarden Nervenzellen. Es verarbeitet Sinneseindrücke, steuert Bewegungen und ist Sitz von Denken, Gefühl und Gedächtnis."},
-  heart:{title:"Menschliches Herz",subtitle:"Kammern · Vorhöfe · Aorta",build:buildHeart,model:"models/heart.glb",beat:true,
-    intro:"Das Herz ist ein faustgroßer Muskel, der unermüdlich Blut durch den Körper pumpt — rund 100.000 Mal am Tag. Es hat vier Räume: zwei Vorhöfe oben, zwei Kammern unten. Die rechte Seite schickt Blut in die Lunge, die linke in den ganzen Körper."},
+  heart:{title:"Menschliches Herz",subtitle:"Kammern · Klappen · Kranzgefäße · große Gefäße",build:buildHeart,beat:true,
+    intro:"Das Herz ist ein faustgroßer Muskel, der unermüdlich Blut durch den Körper pumpt — rund 100.000 Mal am Tag. Es hat vier Räume (zwei Vorhöfe, zwei Kammern), vier Klappen, und wird von den Herzkranzgefäßen selbst versorgt. Klick die einzelnen Strukturen an — oder schneide das Herz auf, um die Klappen im Inneren zu sehen."},
   lungs:{title:"Menschliche Lunge",subtitle:"Lungenflügel · Atemwege",build:buildLungs,model:"models/lungs.glb",
     intro:"Die Lunge versorgt das Blut mit Sauerstoff und gibt Kohlendioxid ab. In den rund 300 Millionen Lungenbläschen findet der Gasaustausch statt. Ein Erwachsener atmet etwa 12–16 Mal pro Minute."},
   kidney:{title:"Nieren",subtitle:"Niere · Harnleiter · Blase",build:buildKidney,model:"models/kidney.glb",
