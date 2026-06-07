@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hand Control — Phase 1</title>
+ 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+ 
+<style>
+  :root {
+    --bg: #070b0f;
+    --bg2: #0d141b;
+    --accent: #2dd4bf;
+    --accent-dim: #155e57;
+    --text: #e6f1ef;
+    --text-dim: #6b8a86;
+    --warn: #f5a524;
+    --line: rgba(45, 212, 191, 0.18);
+  }
+ 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+  }
+ 
+  #scene { position: fixed; inset: 0; z-index: 1; }
+ 
+  /* radial atmosphere behind the canvas */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient( circle at 50% 45%, rgba(45,212,191,0.10), transparent 55%),
+      radial-gradient(circle at 80% 90%, rgba(45,212,191,0.05), transparent 50%);
+    pointer-events: none;
+  }
+ 
+  /* ---- HUD ---- */
+  .hud { position: fixed; z-index: 10; pointer-events: none; }
+ 
+  #topbar {
+    top: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--text-dim); box-shadow: 0 0 0 0 var(--accent);
+    transition: background .3s, box-shadow .3s;
+  }
+  .dot.live { background: var(--accent); box-shadow: 0 0 12px 1px var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .brand h1 { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .brand span { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
+ 
+  #status {
+    font-size: 11px; color: var(--text-dim); letter-spacing: 1px;
+    text-align: right; line-height: 1.6;
+  }
+  #status b { color: var(--accent); font-weight: 500; }
+ 
+  /* legend bottom-left */
+  #legend {
+    bottom: 20px; left: 22px;
+    font-size: 11px; color: var(--text-dim); line-height: 1.9; letter-spacing: .5px;
+  }
+  #legend .k { color: var(--text); }
+  #legend .sep { color: var(--accent-dim); }
+ 
+  /* camera preview bottom-right */
+  #camwrap {
+    bottom: 20px; right: 22px;
+    width: 200px; height: 150px;
+    border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden;
+    background: var(--bg2);
+    pointer-events: none;
+  }
+  #camwrap.hidden { display: none; }
+  #video, #overlay {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    transform: scaleX(-1); /* mirror = selfie view */
+  }
+  #video { object-fit: cover; }
+  #camlabel {
+    position: absolute; top: 6px; left: 8px; z-index: 2;
+    font-size: 9px; letter-spacing: 1px; color: var(--accent);
+    text-shadow: 0 0 6px var(--bg);
+  }
+ 
+  /* start overlay */
+  #gate {
+    position: fixed; inset: 0; z-index: 30;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 22px; text-align: center; padding: 24px;
+    background: radial-gradient(circle at 50% 40%, rgba(13,20,27,.6), var(--bg));
+    backdrop-filter: blur(2px);
+  }
+  #gate.gone { opacity: 0; pointer-events: none; transition: opacity .6s; }
+  #gate h2 { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+  #gate p { font-size: 13px; color: var(--text-dim); max-width: 420px; line-height: 1.7; }
+  #startBtn {
+    pointer-events: auto;
+    font-family: inherit; font-size: 13px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--bg);
+    background: var(--accent); border: none; border-radius: 8px;
+    padding: 14px 34px; cursor: pointer;
+    box-shadow: 0 0 30px rgba(45,212,191,.4);
+    transition: transform .15s, box-shadow .2s;
+  }
+  #startBtn:hover { transform: translateY(-2px); box-shadow: 0 0 44px rgba(45,212,191,.6); }
+  #startBtn:disabled { opacity: .5; cursor: wait; }
+  #skip {
+    pointer-events: auto; background: none; border: none; cursor: pointer;
+    color: var(--text-dim); font-family: inherit; font-size: 11px;
+    letter-spacing: 1px; text-decoration: underline; text-underline-offset: 4px;
+  }
+  #skip:hover { color: var(--text); }
+  #err { color: var(--warn); font-size: 12px; min-height: 16px; }
+</style>
+</head>
+<body>
+ 
+  <div id="scene"></div>
+ 
+  <!-- HUD -->
+  <div id="topbar" class="hud">
+    <div class="brand">
+      <div class="dot" id="liveDot"></div>
+      <div>
+        <h1>Hand&nbsp;Control</h1>
+        <span>Phase 1 · 3D Prototype</span>
+      </div>
+    </div>
+    <div id="status">
+      Kamera: <b id="camState">aus</b><br>
+      Hände: <b id="handState">0</b>
+    </div>
+  </div>
+ 
+  <div id="legend" class="hud">
+    <div><span class="k">Pinch</span> (Daumen+Zeige) <span class="sep">→</span> drehen</div>
+    <div><span class="k">2 Hände</span> <span class="sep">→</span> zoomen</div>
+    <div><span class="k">Maus</span> ziehen / scrollen <span class="sep">→</span> Fallback</div>
+  </div>
+ 
+  <div id="camwrap" class="hud hidden">
+    <span id="camlabel">LIVE</span>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+ 
+  <!-- start gate -->
+  <div id="gate">
+    <h2>Steuere ein 3D-Objekt mit der Hand</h2>
+    <p>Diese Demo öffnet deine Kamera und erkennt deine Hand. Mit einer Pinch-Geste drehst du das Objekt, mit zwei Händen zoomst du. Es wird nichts aufgenommen oder gespeichert — alles läuft live in deinem Browser.</p>
+    <button id="startBtn">Kamera starten</button>
+    <button id="skip">Ohne Kamera ansehen (nur Maus)</button>
+    <div id="err"></div>
+  </div>
+ 
+  <!-- module resolution -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+ 
+  <script type="module">
+  import * as THREE from "three";
+  import { HandLandmarker, FilesetResolver }
+    from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12";
+ 
+  /* =========================================================
+     1) 3D SCENE  — runs immediately, mouse works without camera
+     ========================================================= */
+  const sceneEl = document.getElementById("scene");
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  sceneEl.appendChild(renderer.domElement);
+ 
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 6);
+ 
+  // the object — a faceted crystal so rotation is obvious
+  const group = new THREE.Group();
+  const geo = new THREE.IcosahedronGeometry(1.6, 1);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x2dd4bf, metalness: 0.3, roughness: 0.35, flatShading: true
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  group.add(mesh);
+  const wire = new THREE.LineSegments(
+    new THREE.WireframeGeometry(geo),
+    new THREE.LineBasicMaterial({ color: 0xaef7ec, transparent: true, opacity: 0.25 })
+  );
+  group.add(wire);
+  scene.add(group);
+ 
+  // lighting
+  scene.add(new THREE.AmbientLight(0x88ffee, 0.5));
+  const key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(4, 5, 6); scene.add(key);
+  const rim = new THREE.PointLight(0x2dd4bf, 2, 30); rim.position.set(-6, -3, 4); scene.add(rim);
+ 
+  /* =========================================================
+     2) SHARED INPUT STATE  — every input feeds these targets
+     ========================================================= */
+  let targetRotX = 0, targetRotY = 0;
+  let targetZoom = 6;            // camera distance
+  const ZOOM_MIN = 3, ZOOM_MAX = 12;
+  let interacting = false;       // pause idle spin while user controls
+ 
+  /* ---- mouse fallback ---- */
+  let dragging = false, lastMX = 0, lastMY = 0;
+  renderer.domElement.addEventListener("mousedown", e => { dragging = true; lastMX = e.clientX; lastMY = e.clientY; });
+  window.addEventListener("mouseup", () => dragging = false);
+  window.addEventListener("mousemove", e => {
+    if (!dragging) return;
+    interacting = true;
+    targetRotY += (e.clientX - lastMX) * 0.006;
+    targetRotX += (e.clientY - lastMY) * 0.006;
+    targetRotX = Math.max(-1.4, Math.min(1.4, targetRotX));
+    lastMX = e.clientX; lastMY = e.clientY;
+  });
+  renderer.domElement.addEventListener("wheel", e => {
+    e.preventDefault();
+    interacting = true;
+    targetZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, targetZoom + e.deltaY * 0.005));
+  }, { passive: false });
+ 
+  /* =========================================================
+     3) RENDER LOOP  — smoothly chases the targets (no jitter)
+     ========================================================= */
+  function animate() {
+    requestAnimationFrame(animate);
+    if (!interacting) targetRotY += 0.0025;          // gentle idle spin
+    group.rotation.x += (targetRotX - group.rotation.x) * 0.12;
+    group.rotation.y += (targetRotY - group.rotation.y) * 0.12;
+    camera.position.z += (targetZoom - camera.position.z) * 0.12;
+    renderer.render(scene, camera);
+  }
+  animate();
+ 
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+ 
+  /* =========================================================
+     4) HAND TRACKING  — MediaPipe, started on button press
+     ========================================================= */
+  const video = document.getElementById("video");
+  const overlay = document.getElementById("overlay");
+  const octx = overlay.getContext("2d");
+  const camState = document.getElementById("camState");
+  const handState = document.getElementById("handState");
+  const liveDot = document.getElementById("liveDot");
+  const errEl = document.getElementById("err");
+ 
+  let handLandmarker = null;
+  let lastVideoTime = -1;
+ 
+  // pinch-drag state
+  let pinching = false, lastPX = 0, lastPY = 0;
+  // two-hand zoom state
+  let twoHandStartDist = null, twoHandStartZoom = null;
+ 
+  const HAND_CONNECTIONS = [
+    [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
+    [5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],
+    [13,17],[17,18],[18,19],[19,20],[0,17]
+  ];
+ 
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+ 
+  async function startCamera() {
+    errEl.textContent = "";
+    try {
+      // load the hand model
+      const fileset = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
+      );
+      handLandmarker = await HandLandmarker.createFromOptions(fileset, {
+        baseOptions: {
+          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+          delegate: "GPU"
+        },
+        runningMode: "VIDEO",
+        numHands: 2
+      });
+ 
+      // open the camera
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480, facingMode: "user" }
+      });
+      video.srcObject = stream;
+      await video.play();
+      overlay.width = video.videoWidth || 640;
+      overlay.height = video.videoHeight || 480;
+ 
+      document.getElementById("camwrap").classList.remove("hidden");
+      camState.textContent = "an";
+      liveDot.classList.add("live");
+      detectLoop();
+    } catch (e) {
+      console.error(e);
+      errEl.textContent = "Kamera oder Modell konnte nicht geladen werden: " + (e.message || e);
+    }
+  }
+ 
+  function detectLoop() {
+    if (handLandmarker && video.readyState >= 2) {
+      const now = performance.now();
+      if (video.currentTime !== lastVideoTime) {
+        lastVideoTime = video.currentTime;
+        const res = handLandmarker.detectForVideo(video, now);
+        handleHands(res);
+      }
+    }
+    requestAnimationFrame(detectLoop);
+  }
+ 
+  function handleHands(res) {
+    const hands = res.landmarks || [];
+    handState.textContent = hands.length;
+ 
+    // draw skeleton on preview
+    octx.clearRect(0, 0, overlay.width, overlay.height);
+    octx.strokeStyle = "rgba(45,212,191,0.7)";
+    octx.fillStyle = "#aef7ec";
+    octx.lineWidth = 2;
+    for (const lm of hands) {
+      for (const [a, b] of HAND_CONNECTIONS) {
+        octx.beginPath();
+        octx.moveTo(lm[a].x * overlay.width, lm[a].y * overlay.height);
+        octx.lineTo(lm[b].x * overlay.width, lm[b].y * overlay.height);
+        octx.stroke();
+      }
+      for (const p of lm) {
+        octx.beginPath();
+        octx.arc(p.x * overlay.width, p.y * overlay.height, 3, 0, Math.PI * 2);
+        octx.fill();
+      }
+    }
+ 
+    // ----- TWO HANDS → zoom -----
+    if (hands.length >= 2) {
+      pinching = false;
+      const w1 = hands[0][0], w2 = hands[1][0];      // wrists
+      const d = dist(w1, w2);
+      if (twoHandStartDist === null) { twoHandStartDist = d; twoHandStartZoom = targetZoom; }
+      const ratio = twoHandStartDist / Math.max(d, 0.0001);
+      interacting = true;
+      targetZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, twoHandStartZoom * ratio));
+      return;
+    }
+    twoHandStartDist = null;
+ 
+    // ----- ONE HAND → pinch to rotate -----
+    if (hands.length === 1) {
+      const lm = hands[0];
+      const thumb = lm[4], index = lm[8];
+      const handSize = Math.max(dist(lm[0], lm[9]), 0.0001);  // wrist→middle base, scale-independent
+      const pinchRatio = dist(thumb, index) / handSize;
+ 
+      // midpoint of pinch, mirrored to match selfie view
+      const px = 1 - (thumb.x + index.x) / 2;
+      const py = (thumb.y + index.y) / 2;
+ 
+      if (pinchRatio < 0.45) {
+        if (!pinching) { pinching = true; lastPX = px; lastPY = py; }
+        else {
+          interacting = true;
+          targetRotY += (px - lastPX) * 5.0;
+          targetRotX += (py - lastPY) * 5.0;
+          targetRotX = Math.max(-1.4, Math.min(1.4, targetRotX));
+          lastPX = px; lastPY = py;
+        }
+      } else {
+        pinching = false;
+      }
+      return;
+    }
+ 
+    // no hands
+    pinching = false;
+  }
+ 
+  /* =========================================================
+     5) START GATE
+     ========================================================= */
+  const gate = document.getElementById("gate");
+  const startBtn = document.getElementById("startBtn");
+  document.getElementById("skip").addEventListener("click", () => gate.classList.add("gone"));
+  startBtn.addEventListener("click", async () => {
+    startBtn.disabled = true;
+    startBtn.textContent = "lädt…";
+    await startCamera();
+    if (!errEl.textContent) gate.classList.add("gone");
+    startBtn.disabled = false;
+    startBtn.textContent = "Kamera starten";
+  });
+  </script>
+</body>
+</html>
+ 
