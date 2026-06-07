@@ -59,7 +59,18 @@
   #skip{pointer-events:auto;background:none;border:none;cursor:pointer;color:var(--text-dim);font-family:inherit;font-size:11px;letter-spacing:1px;text-decoration:underline;text-underline-offset:4px}
   #skip:hover{color:var(--text)}
   #err{color:var(--warn);font-size:12px;min-height:16px;max-width:440px}
-  @media(max-width:640px){#cam{width:130px;height:98px}#panel{width:calc(100% - 44px);top:auto;bottom:170px;transform:none}#tools{top:58px;right:12px}}
+  #info{position:fixed;z-index:12;top:50%;left:22px;transform:translateY(-50%);width:256px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+  #info.show{opacity:1;pointer-events:auto}
+  #info h4{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+  #ekg{width:100%;height:70px;display:block;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+  #info .bpm{font-size:11px;color:var(--text-dim);margin:6px 0 10px;letter-spacing:1px}
+  #info .bpm b{color:var(--text)}
+  #info .facts{font-size:11px;color:var(--text-dim);line-height:1.7}
+  #info .facts div{padding:3px 0;border-bottom:1px solid rgba(45,212,191,.07);display:flex;justify-content:space-between;gap:10px}
+  #info .facts b{color:var(--text);text-align:right}
+  #iclose{position:absolute;top:10px;right:12px;cursor:pointer;color:var(--text-dim);background:none;border:none;font-size:18px;font-family:inherit}
+  #iclose:hover{color:var(--text)}
+  @media(max-width:640px){#cam{width:130px;height:98px}#panel{width:calc(100% - 44px);top:auto;bottom:170px;transform:none}#tools{top:58px;right:12px}#info{left:12px;right:12px;width:auto;top:auto;bottom:170px;transform:none}}
 </style>
 
 <script type="importmap">
@@ -82,6 +93,7 @@
     <button class="btn" id="modebtn">Modus: Schnitt</button>
     <button class="btn active" id="rotbtn">&#8635; Auto-Drehung</button>
     <button class="btn active" id="beatbtn">&#9829; Herzschlag</button>
+    <button class="btn" id="databtn">&#9636; EKG &amp; Fakten</button>
     <button class="btn" id="resetbtn">&#8634; Zurücksetzen</button>
   </div>
   <div id="legend" class="hud">
@@ -103,6 +115,21 @@
       <textarea id="pnote" placeholder="z.B. für die Klausur merken..."></textarea>
       <div id="saved"></div></div>
   </div>
+  <div id="info">
+    <button id="iclose">&times;</button>
+    <h4>EKG / Kardiogramm</h4>
+    <canvas id="ekg"></canvas>
+    <div class="bpm"><b>72</b> Schläge/min (Ruhe)</div>
+    <div class="facts">
+      <div><span>Ruhepuls</span><b>60–100/min</b></div>
+      <div><span>Schläge/Tag</span><b>~100.000</b></div>
+      <div><span>Pumpleistung</span><b>~5 L/min</b></div>
+      <div><span>Gewicht</span><b>~300 g</b></div>
+      <div><span>Taktgeber</span><b>Sinusknoten</b></div>
+      <div><span>Herzton</span><b>Klappenschluss</b></div>
+    </div>
+  </div>
+
   <div id="gate">
     <h2>Menschliches Herz</h2>
     <p>Kamera öffnen und mit der Hand steuern: Pinch zum Drehen, zwei Hände zum Zoomen, zwei gegriffene Hände auseinander zum Aufschneiden. Klick auf eine Struktur zeigt ihre Funktion. Maus & Trackpad gehen immer auch.</p>
@@ -369,6 +396,30 @@ function animate(){
 }
 animate();
 window.addEventListener("resize",()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+
+/* ---- EKG-Panel: Daten-Button + live Kardiogramm ---- */
+const infoPanel=document.getElementById("info");
+document.getElementById("databtn").addEventListener("click",()=>infoPanel.classList.toggle("show"));
+document.getElementById("iclose").addEventListener("click",()=>infoPanel.classList.remove("show"));
+(function ekg(){
+  const c=document.getElementById("ekg");const x=c.getContext("2d");
+  function fit(){c.width=c.clientWidth||240;c.height=c.clientHeight||70;}
+  fit();window.addEventListener("resize",fit);
+  const data=[];let phase=0;
+  const beat=p=>{const gg=(cc,w,h)=>h*Math.exp(-((p-cc)*(p-cc))/(2*w*w));return gg(0.14,0.018,0.12)-gg(0.30,0.008,0.18)+gg(0.33,0.006,0.95)-gg(0.36,0.010,0.32)+gg(0.56,0.04,0.28);};
+  function draw(){
+    requestAnimationFrame(draw);
+    const w=c.width,h=c.height;phase+=0.006;data.push(beat(phase%1));while(data.length>w)data.shift();
+    x.clearRect(0,0,w,h);
+    x.strokeStyle="rgba(45,212,191,.07)";x.lineWidth=1;
+    for(let gx=0;gx<w;gx+=14){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,h);x.stroke();}
+    x.strokeStyle="#2dd4bf";x.lineWidth=2;x.beginPath();
+    const mid=h*0.6,amp=h*0.4;
+    for(let i=0;i<data.length;i++){const yy=mid-data[i]*amp;if(i===0)x.moveTo(0,yy);else x.lineTo(i,yy);}
+    x.stroke();
+  }
+  draw();
+})();
 
 /* =====================================================================
    5) HAND-TRACKING (MediaPipe)
