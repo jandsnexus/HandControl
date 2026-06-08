@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-
 <style>
   :root{--bg:#070b0f;--bg2:#0d141b;--accent:#2dd4bf;--accent-dim:#155e57;--text:#e6f1ef;--text-dim:#6b8a86;--warn:#f5a524;--line:rgba(45,212,191,.18)}
   *{margin:0;padding:0;box-sizing:border-box}
@@ -26,7 +25,7 @@
   .brand span{font-size:11px;color:var(--text-dim);letter-spacing:1px}
   #status{font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:right;line-height:1.6}
   #status b{color:var(--accent);font-weight:500}
-  #legend{bottom:20px;left:22px;font-size:11px;color:var(--text-dim);line-height:1.9;letter-spacing:.5px}
+  #legend{bottom:20px;left:22px;font-size:11px;color:var(--text-dim);line-height:1.9;letter-spacing:.5px;max-width:230px}
   #legend .k{color:var(--text)} #legend .sep{color:var(--accent-dim)}
   #cam{bottom:20px;right:22px;width:200px;height:150px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2)}
   #cam.hidden{display:none}
@@ -37,6 +36,9 @@
   .btn{pointer-events:auto;font-family:inherit;font-size:11px;letter-spacing:1px;color:var(--text);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;white-space:nowrap}
   .btn:hover{border-color:var(--accent);color:var(--accent)}
   .btn.active{border-color:var(--accent);color:var(--accent)}
+  #instruments{bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;padding:8px;background:rgba(13,20,27,.7);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(6px)}
+  #instruments .btn{background:transparent}
+  #instruments .btn.tool.active{background:var(--accent);color:var(--bg);border-color:var(--accent)}
   #panel{position:fixed;z-index:12;top:50%;right:22px;transform:translateY(-50%);width:300px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px;opacity:0;pointer-events:none;transition:opacity .25s}
   #panel.show{opacity:1;pointer-events:auto}
   #panel .ph{display:flex;align-items:center;gap:8px;margin-bottom:10px}
@@ -50,15 +52,6 @@
   #pclose{position:absolute;top:12px;right:14px;cursor:pointer;color:var(--text-dim);background:none;border:none;font-size:18px;font-family:inherit}
   #pclose:hover{color:var(--text)}
   #saved{font-size:10px;color:var(--accent);margin-top:6px;height:12px;letter-spacing:1px}
-  #gate{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px;background:radial-gradient(circle at 50% 40%,rgba(13,20,27,.6),var(--bg));backdrop-filter:blur(2px)}
-  #gate.gone{opacity:0;pointer-events:none;transition:opacity .6s}
-  #gate h2{font-size:22px;font-weight:700}
-  #gate p{font-size:13px;color:var(--text-dim);max-width:440px;line-height:1.7}
-  #start{pointer-events:auto;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bg);background:var(--accent);border:none;border-radius:8px;padding:14px 34px;cursor:pointer;box-shadow:0 0 30px rgba(45,212,191,.4);transition:.2s}
-  #start:hover{transform:translateY(-2px);box-shadow:0 0 44px rgba(45,212,191,.6)}
-  #skip{pointer-events:auto;background:none;border:none;cursor:pointer;color:var(--text-dim);font-family:inherit;font-size:11px;letter-spacing:1px;text-decoration:underline;text-underline-offset:4px}
-  #skip:hover{color:var(--text)}
-  #err{color:var(--warn);font-size:12px;min-height:16px;max-width:440px}
   #info{position:fixed;z-index:12;top:50%;left:22px;transform:translateY(-50%);width:256px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
   #info.show{opacity:1;pointer-events:auto}
   #info h4{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
@@ -70,9 +63,17 @@
   #info .facts b{color:var(--text);text-align:right}
   #iclose{position:absolute;top:10px;right:12px;cursor:pointer;color:var(--text-dim);background:none;border:none;font-size:18px;font-family:inherit}
   #iclose:hover{color:var(--text)}
-  @media(max-width:640px){#cam{width:130px;height:98px}#panel{width:calc(100% - 44px);top:auto;bottom:170px;transform:none}#tools{top:58px;right:12px}#info{left:12px;right:12px;width:auto;top:auto;bottom:170px;transform:none}}
+  #gate{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px;background:radial-gradient(circle at 50% 40%,rgba(13,20,27,.6),var(--bg));backdrop-filter:blur(2px)}
+  #gate.gone{opacity:0;pointer-events:none;transition:opacity .6s}
+  #gate h2{font-size:22px;font-weight:700}
+  #gate p{font-size:13px;color:var(--text-dim);max-width:460px;line-height:1.7}
+  #start{pointer-events:auto;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bg);background:var(--accent);border:none;border-radius:8px;padding:14px 34px;cursor:pointer;box-shadow:0 0 30px rgba(45,212,191,.4);transition:.2s}
+  #start:hover{transform:translateY(-2px);box-shadow:0 0 44px rgba(45,212,191,.6)}
+  #skip{pointer-events:auto;background:none;border:none;cursor:pointer;color:var(--text-dim);font-family:inherit;font-size:11px;letter-spacing:1px;text-decoration:underline;text-underline-offset:4px}
+  #skip:hover{color:var(--text)}
+  #err{color:var(--warn);font-size:12px;min-height:16px;max-width:460px}
+  @media(max-width:640px){#cam{width:130px;height:98px}#panel{width:calc(100% - 44px);top:auto;bottom:200px;transform:none}#tools{top:58px;right:12px}#info{left:12px;right:12px;width:auto;top:auto;bottom:200px;transform:none}#legend{display:none}#instruments{bottom:12px}}
 </style>
-
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
 </script>
@@ -83,7 +84,7 @@
     <div class="brand">
       <a class="back" href="index.html" title="Übersicht">&#8592;</a>
       <div class="dot" id="dot"></div>
-      <div><h1>Menschliches Herz</h1><span>Geformtes Myokard · Klappen · Kranzgefäße</span></div>
+      <div><h1>Menschliches Herz</h1><span>Teardown · Instrumente · Handtracking</span></div>
     </div>
     <div id="status">Kamera: <b id="camstate">aus</b><br>Hände: <b id="handstate">0</b></div>
   </div>
@@ -96,11 +97,19 @@
     <button class="btn" id="databtn">&#9636; EKG &amp; Fakten</button>
     <button class="btn" id="resetbtn">&#8634; Zurücksetzen</button>
   </div>
+  <div id="instruments" class="hud">
+    <button class="btn tool active" id="t-none" data-tool="none">&#9995; Ansehen</button>
+    <button class="btn tool" id="t-scalpel" data-tool="scalpel">&#128298; Skalpell</button>
+    <button class="btn tool" id="t-clamp" data-tool="clamp">&#9886; Klemme</button>
+    <button class="btn tool" id="t-probe" data-tool="probe">&#9678; Sonde</button>
+  </div>
   <div id="legend" class="hud">
-    <div><span class="k">Pinch</span> <span class="sep">&#8594;</span> drehen</div>
-    <div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div>
-    <div><span class="k">2 Hände + Pinch</span> <span class="sep">&#8594;</span> aufschneiden</div>
-    <div><span class="k">Klick</span> <span class="sep">&#8594;</span> Struktur-Info</div>
+    <div id="legendInner">
+      <div><span class="k">Pinch</span> <span class="sep">&#8594;</span> drehen</div>
+      <div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div>
+      <div><span class="k">2 Hände + Pinch</span> <span class="sep">&#8594;</span> auseinanderziehen</div>
+      <div><span class="k">Klick</span> <span class="sep">&#8594;</span> Struktur-Info</div>
+    </div>
   </div>
   <div id="cam" class="hud hidden">
     <span id="camlabel">LIVE</span>
@@ -129,10 +138,9 @@
       <div><span>Herzton</span><b>Klappenschluss</b></div>
     </div>
   </div>
-
   <div id="gate">
     <h2>Menschliches Herz</h2>
-    <p>Kamera öffnen und mit der Hand steuern: Pinch zum Drehen, zwei Hände zum Zoomen, zwei gegriffene Hände auseinander zum Aufschneiden. Klick auf eine Struktur zeigt ihre Funktion. Maus & Trackpad gehen immer auch.</p>
+    <p>Kamera öffnen und mit der Hand steuern. Unten wählst du ein Instrument: Mit dem Skalpell über das Herz fahren und „zudrücken" (Pinch) schneidet es auf und legt die Klappen frei. Ohne Instrument: Pinch dreht, zwei Hände zoomen, zwei Hände auseinander = Teardown. Maus & Trackpad gehen immer auch.</p>
     <button id="start">Kamera starten</button>
     <button id="skip">Ohne Kamera ansehen (nur Maus)</button>
     <div id="err"></div>
@@ -144,7 +152,7 @@ import { HandLandmarker, FilesetResolver }
   from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12";
 
 /* =====================================================================
-   1) One-Euro-Filter — glättet die zittrigen Handdaten
+   1) One-Euro-Filter
    ===================================================================== */
 class LowPass { constructor(){this.s=null;} filter(x,a){this.s=(this.s===null)?x:a*x+(1-a)*this.s;return this.s;} }
 class OneEuro {
@@ -157,162 +165,147 @@ class OneEuro {
    2) Hilfen
    ===================================================================== */
 function tagPart(obj,id,label,info){obj.traverse(o=>{o.userData.part={partId:id,label,info};});obj.userData.part={partId:id,label,info};return obj;}
-// fleischige Oberfläche: Vertices leicht verrauschen
-function fleshNoise(geo,amp,freq){const p=geo.attributes.position,n=new THREE.Vector3();for(let i=0;i<p.count;i++){n.set(p.getX(i),p.getY(i),p.getZ(i));const u=n.clone().normalize();const d=Math.sin(u.x*freq)*Math.cos(u.y*freq*0.9)*Math.sin(u.z*freq)+0.5*Math.sin(u.x*freq*2.1+u.y*3.0);n.addScaledVector(u,amp*d);p.setXYZ(i,n.x,n.y,n.z);}p.needsUpdate=true;geo.computeVertexNormals();}
 
 /* =====================================================================
-   3) DAS HERZ — organisch geformtes Myokard + alle Strukturen
-   Ausrichtung: Vorderansicht. +Z = vorne, +Y = oben, +X = (Patienten-)links.
+   3) DAS HERZ — geformtes Myokard, innere Strukturen, Teardown-Daten
    ===================================================================== */
 function buildHeart(){
   const g=new THREE.Group();
   const C={atrium:0xa83f46,aorta:0xd23b3b,artery:0xe8403c,pulm:0x4f63c4,vein:0x4a6fb0,
-           pulmVein:0xc24a48,coroVein:0x7d5fae,valve:0xe9e2cf,myo:0x9a2b36,myoDark:0x5e141d};
+           pulmVein:0xc24a48,coroVein:0x7d5fae,valve:0xe9e2cf,myo:0x9a2b36,myoDark:0x5e141d,cav:0x3c0d14};
   const mk=(c,rough=0.62)=>new THREE.MeshStandardMaterial({color:c,roughness:rough,metalness:0.04});
   const V=a=>new THREE.Vector3(a[0],a[1],a[2]);
   const tube=(pts,r,c,rough=0.5)=>{const curve=new THREE.CatmullRomCurve3(pts.map(V));return new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(24,pts.length*16),r,12,false),mk(c,rough));};
-  const noisyEll=(rx,ry,rz,c,amp=0.05)=>{const geo=new THREE.SphereGeometry(1,48,36);fleshNoise(geo,amp,7);const m=new THREE.Mesh(geo,mk(c));m.scale.set(rx,ry,rz);return m;};
 
-  /* ---------- ORGANISCH GEFORMTES MYOKARD (Kammern + Apex) ----------
-     Eine hochauflösende Kugel wird Vertex für Vertex zur Herzform verzogen:
-     zulaufende Spitze, fülligerer oberer Teil, die beiden Kammer-Wölbungen,
-     die vordere & hintere Längsfurche und die Kranzfurche werden eingedellt.
-     Vertex-Farben dunkeln die Furchen ab → mehr Tiefe.                  */
+  /* ---- geformtes Myokard ---- */
   function sculptMyocardium(){
-    const geo=new THREE.SphereGeometry(1,180,140);
-    const pos=geo.attributes.position;
-    const n=new THREE.Vector3();
-    const colors=[];
+    const geo=new THREE.SphereGeometry(1,170,130);
+    const pos=geo.attributes.position;const n=new THREE.Vector3();const colors=[];
     const base=new THREE.Color(C.myo), dark=new THREE.Color(C.myoDark);
     for(let i=0;i<pos.count;i++){
       n.set(pos.getX(i),pos.getY(i),pos.getZ(i)).normalize();
-      const nx=n.x, ny=n.y, nz=n.z;
-      const lower=Math.max(0,-ny), upper=Math.max(0,ny);
-      let r=1.0;
-      r*=1+0.17*upper;                                   // fülliger oben (Basis)
-      r*=1+0.11*nx;                                      // linke Kammer (+X) bulliger
-      const gA=Math.exp(-Math.pow((nx+0.05)/0.15,2))*Math.max(0,nz);   // vordere Furche (LAD)
-      const gP=Math.exp(-Math.pow((nx+0.02)/0.17,2))*Math.max(0,-nz);  // hintere Furche (PDA)
-      const av=Math.exp(-Math.pow((ny-0.5)/0.13,2));                   // Kranzfurche (horizontal)
+      const nx=n.x,ny=n.y,nz=n.z;const lower=Math.max(0,-ny),upper=Math.max(0,ny);
+      let r=1.0; r*=1+0.17*upper; r*=1+0.11*nx;
+      const gA=Math.exp(-Math.pow((nx+0.05)/0.15,2))*Math.max(0,nz);
+      const gP=Math.exp(-Math.pow((nx+0.02)/0.17,2))*Math.max(0,-nz);
+      const av=Math.exp(-Math.pow((ny-0.5)/0.13,2));
       r-=0.18*gA; r-=0.12*gP; r-=0.10*av*(1-Math.abs(nx)*0.4);
       const grooveShade=Math.min(0.85,Math.max(gA*1.25,gP*1.0,av*0.85));
-      r+=0.020*Math.sin(nx*17)*Math.cos(ny*15)*Math.sin(nz*17)+0.011*Math.sin(nx*31+ny*9); // fleischig
-      const horiz=1-0.62*Math.pow(lower,1.25);           // zur Spitze schmaler
-      let x=n.x*r*horiz, z=n.z*r*horiz*0.92, y=n.y*r*(1+0.34*lower); // Spitze nach unten gezogen
-      x+=-0.10*lower; z+=0.12*lower;                     // Spitze leicht nach vorne/links
+      r+=0.020*Math.sin(nx*17)*Math.cos(ny*15)*Math.sin(nz*17)+0.011*Math.sin(nx*31+ny*9);
+      const horiz=1-0.62*Math.pow(lower,1.25);
+      let x=n.x*r*horiz, z=n.z*r*horiz*0.92, y=n.y*r*(1+0.34*lower);
+      x+=-0.10*lower; z+=0.12*lower;
       pos.setXYZ(i,x,y,z);
-      const col=base.clone().lerp(dark,grooveShade);
-      colors.push(col.r,col.g,col.b);
+      const col=base.clone().lerp(dark,grooveShade);colors.push(col.r,col.g,col.b);
     }
-    geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
-    geo.computeVertexNormals();
+    geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
     const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.66,metalness:0.04}));
-    m.scale.set(1.05,1.32,1.0); m.position.y=-0.15;
-    return m;
+    m.scale.set(1.05,1.32,1.0);m.position.y=-0.15;return m;
   }
-  const myocardium=sculptMyocardium();
-  tagPart(myocardium,"ventricles","Herzmuskel & Kammern (Myokard)","Die kräftige Muskelwand des Herzens, geformt zu den beiden Kammern mit der zulaufenden Spitze (Apex). Die linke Kammer hat die dickste Wand und pumpt das Blut in den ganzen Körper, die rechte in die Lunge. In den Furchen der Oberfläche verlaufen die Herzkranzgefäße.");
+  const ventGroup=new THREE.Group();
+  ventGroup.add(sculptMyocardium());
+  // innere Kammerhöhlen (beim Schnitt als dunkle Räume sichtbar)
+  const lvCav=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),mk(C.cav,0.9));lvCav.scale.set(0.55,1.0,0.55);lvCav.position.set(0.35,-0.45,-0.05);
+  const rvCav=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),mk(C.cav,0.9));rvCav.scale.set(0.5,0.85,0.42);rvCav.position.set(-0.5,-0.2,0.42);
+  ventGroup.add(lvCav,rvCav);
+  // Trabekel (Muskelbälkchen an der Innenwand)
+  for(let k=0;k<5;k++){const tb=new THREE.Mesh(new THREE.TorusGeometry(0.18+0.04*k,0.02,6,16),mk(C.myoDark));tb.position.set(0.35,-0.9+0.28*k,0.1);tb.rotation.x=1.2;ventGroup.add(tb);}
+  tagPart(ventGroup,"ventricles","Herzmuskel & Kammern (Myokard)","Die kräftige Muskelwand mit den beiden Kammern und der zulaufenden Spitze (Apex). Die linke Kammer hat die dickste Wand. Im Inneren sieht man beim Aufschneiden die Höhlen und die Muskelbälkchen (Trabekel).");
 
-  /* ---------- VORHÖFE (Atrien) mit Herzohren ---------- */
-  const la=noisyEll(0.6,0.58,0.6,C.atrium,0.04); la.position.set(0.55,1.0,-0.5);
-  const laApp=noisyEll(0.3,0.24,0.38,C.atrium,0.05); laApp.position.set(0.78,0.78,0.2);
-  const leftAtrium=new THREE.Group(); leftAtrium.add(la,laApp);
-  tagPart(leftAtrium,"la","Linker Vorhof","Nimmt das sauerstoffreiche Blut aus den vier Lungenvenen auf und leitet es durch die Mitralklappe in die linke Kammer. Das gezackte linke Herzohr (Auricula) liegt vorne auf.");
-  const ra=noisyEll(0.64,0.64,0.6,C.atrium,0.04); ra.position.set(-0.82,0.72,0.05);
-  const raApp=noisyEll(0.3,0.26,0.36,C.atrium,0.05); raApp.position.set(-0.55,0.9,0.45);
-  const rightAtrium=new THREE.Group(); rightAtrium.add(ra,raApp);
-  tagPart(rightAtrium,"ra","Rechter Vorhof","Sammelt das sauerstoffarme Blut aus dem Körper (obere & untere Hohlvene) und gibt es durch die Trikuspidalklappe an die rechte Kammer. Enthält den Sinusknoten — den natürlichen Taktgeber.");
+  /* ---- Vorhöfe ---- */
+  const la=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),mk(C.atrium));la.scale.set(0.6,0.58,0.6);la.position.set(0.55,1.0,-0.5);
+  const laApp=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),mk(C.atrium));laApp.scale.set(0.3,0.24,0.38);laApp.position.set(0.78,0.78,0.2);
+  const leftAtrium=new THREE.Group();leftAtrium.add(la,laApp);
+  tagPart(leftAtrium,"la","Linker Vorhof","Nimmt sauerstoffreiches Blut aus den Lungenvenen auf und leitet es durch die Mitralklappe in die linke Kammer.");
+  const ra=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),mk(C.atrium));ra.scale.set(0.64,0.64,0.6);ra.position.set(-0.82,0.72,0.05);
+  const raApp=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),mk(C.atrium));raApp.scale.set(0.3,0.26,0.36);raApp.position.set(-0.55,0.9,0.45);
+  const rightAtrium=new THREE.Group();rightAtrium.add(ra,raApp);
+  tagPart(rightAtrium,"ra","Rechter Vorhof","Sammelt sauerstoffarmes Blut aus den Hohlvenen und enthält den Sinusknoten — den Taktgeber des Herzens.");
 
-  /* ---------- AORTA + Bogen + 3 Abgänge ---------- */
+  /* ---- Aorta + Bogen + Abgänge ---- */
   const aorta=tube([[0.05,0.55,-0.05],[0.05,1.3,-0.1],[0.05,1.95,-0.15],[0.2,2.35,-0.25],[0.55,2.4,-0.55],[0.6,2.0,-0.95],[0.55,1.0,-1.05],[0.55,0.2,-1.05]],0.24,C.aorta);
   const bc=tube([[0.18,2.32,-0.28],[0.0,2.85,-0.2],[-0.15,3.2,-0.15]],0.09,C.aorta);
   const lcc=tube([[0.35,2.4,-0.4],[0.4,2.95,-0.4],[0.42,3.3,-0.4]],0.075,C.aorta);
   const lsc=tube([[0.52,2.36,-0.5],[0.7,2.85,-0.55],[0.8,3.15,-0.6]],0.075,C.aorta);
-  const sinus=noisyEll(0.32,0.22,0.32,C.aorta,0.02); sinus.position.set(0.05,0.5,-0.02); // Aortenwurzel
-  const aortaGrp=new THREE.Group(); aortaGrp.add(aorta,bc,lcc,lsc,sinus);
-  tagPart(aortaGrp,"aorta","Aorta (Hauptschlagader)","Die größte Arterie des Körpers. Sie steigt aus der linken Kammer auf, bildet den Aortenbogen und führt sauerstoffreiches Blut in den Kreislauf. Vom Bogen zweigen drei Gefäße ab: Truncus brachiocephalicus, linke Halsschlagader und linke Schlüsselbeinarterie.");
+  const aortaGrp=new THREE.Group();aortaGrp.add(aorta,bc,lcc,lsc);
+  tagPart(aortaGrp,"aorta","Aorta (Hauptschlagader)","Steigt aus der linken Kammer auf, bildet den Bogen und führt sauerstoffreiches Blut in den Körper. Drei Abgänge versorgen Kopf und Arme.");
 
-  /* ---------- LUNGENARTERIENSTAMM ---------- */
+  /* ---- Lungenarterienstamm ---- */
   const pt=tube([[-0.45,0.55,0.45],[-0.3,1.2,0.25],[-0.1,1.7,-0.05],[0.0,1.9,-0.25]],0.22,C.pulm);
   const rpa=tube([[0.0,1.9,-0.25],[-0.5,1.85,-0.4],[-1.0,1.7,-0.5]],0.12,C.pulm);
   const lpa=tube([[0.0,1.9,-0.25],[0.5,1.9,-0.45],[0.95,1.7,-0.6]],0.12,C.pulm);
-  const ligament=tube([[0.18,2.0,-0.3],[0.32,1.95,-0.4]],0.03,C.coroVein,0.5); // Ligamentum arteriosum
-  const pulmGrp=new THREE.Group(); pulmGrp.add(pt,rpa,lpa,ligament);
-  tagPart(pulmGrp,"pulmonary","Lungenarterienstamm","Führt das sauerstoffarme Blut aus der rechten Kammer zur Lunge. Er kreuzt vor der Aorta und teilt sich in rechte und linke Lungenarterie. Das Ligamentum arteriosum verbindet ihn mit dem Aortenbogen (Rest eines Gefäßes aus der Embryonalzeit).");
+  const pulmGrp=new THREE.Group();pulmGrp.add(pt,rpa,lpa);
+  tagPart(pulmGrp,"pulmonary","Lungenarterienstamm","Führt sauerstoffarmes Blut aus der rechten Kammer zur Lunge und teilt sich in rechte und linke Lungenarterie.");
 
-  /* ---------- HOHLVENEN ---------- */
+  /* ---- Hohlvenen ---- */
   const svc=tube([[-0.75,2.1,-0.05],[-0.78,1.5,0.0],[-0.8,0.95,0.05]],0.16,C.vein);
   const ivc=tube([[-0.7,-1.0,-0.2],[-0.72,-0.4,-0.1],[-0.7,0.25,0.0]],0.17,C.vein);
-  const cavae=new THREE.Group(); cavae.add(svc,ivc);
-  tagPart(cavae,"cavae","Obere & untere Hohlvene","Die beiden größten Venen. Die obere Hohlvene bringt Blut aus Kopf und Armen, die untere aus Bauch und Beinen — beide münden in den rechten Vorhof.");
+  const cavae=new THREE.Group();cavae.add(svc,ivc);
+  tagPart(cavae,"cavae","Obere & untere Hohlvene","Die beiden größten Venen — sie münden in den rechten Vorhof.");
 
-  /* ---------- LUNGENVENEN (4) ---------- */
+  /* ---- Lungenvenen ---- */
   const pv=new THREE.Group();
   [[0.95,1.3,-0.85],[1.08,1.0,-0.95],[0.98,0.7,-0.95],[1.02,1.1,-0.6]].forEach(p=>{pv.add(tube([[p[0],p[1],p[2]],[0.62,p[1]*0.85+0.1,-0.62],[0.5,1.0,-0.5]],0.085,C.pulmVein));});
-  tagPart(pv,"pulmveins","Lungenvenen","Vier Venen, die das in der Lunge mit Sauerstoff angereicherte Blut zurück zum linken Vorhof bringen. Die einzigen Venen, die sauerstoffreiches Blut führen.");
+  tagPart(pv,"pulmveins","Lungenvenen","Vier Venen, die sauerstoffreiches Blut aus der Lunge zum linken Vorhof bringen.");
 
-  /* ---------- LINKE KORONARARTERIE: Hauptstamm, LAD, Diagonal- & Septaläste ---------- */
+  /* ---- Kranzarterien ---- */
   const lmca=tube([[0.05,0.52,0.05],[0.12,0.48,0.32]],0.075,C.artery,0.4);
   const lad=tube([[0.12,0.48,0.32],[0.02,0.1,0.56],[-0.04,-0.5,0.56],[-0.05,-1.15,0.46],[0.0,-1.7,0.32],[0.12,-2.05,0.16]],0.07,C.artery,0.4);
   const diag1=tube([[0.0,-0.2,0.56],[0.38,-0.5,0.46],[0.62,-0.85,0.26]],0.045,C.artery,0.4);
   const diag2=tube([[-0.03,-0.7,0.53],[0.32,-1.0,0.4],[0.52,-1.3,0.2]],0.045,C.artery,0.4);
-  const sept=new THREE.Group();
-  [[-0.02,0.0,0.5],[-0.04,-0.4,0.5],[-0.05,-0.85,0.42]].forEach(p=>{sept.add(tube([[p[0],p[1],p[2]],[p[0]-0.02,p[1]-0.05,p[2]-0.35]],0.03,C.artery,0.4));}); // Septaläste tauchen ein
-  const lca=new THREE.Group(); lca.add(lmca,lad,diag1,diag2,sept);
-  tagPart(lca,"lad","Linke Koronararterie (LAD)","Der Hauptstamm (LMCA) entspringt der Aorta und teilt sich. Der vordere absteigende Ast (LAD) zieht in der vorderen Furche zur Spitze und versorgt Vorderwand und vordere zwei Drittel der Scheidewand (über die Septaläste). Seine Verstopfung ist der klassische Vorderwandinfarkt — der „Widowmaker“.");
-
-  /* ---------- RAMUS CIRCUMFLEXUS + Marginaläste ---------- */
+  const lca=new THREE.Group();lca.add(lmca,lad,diag1,diag2);
+  tagPart(lca,"lad","Linke Koronararterie (LAD)","Versorgt Vorderwand und Scheidewand. Ihre Verstopfung ist der klassische Vorderwandinfarkt (Widowmaker).");
   const cx=tube([[0.12,0.48,0.32],[0.62,0.55,0.1],[0.97,0.35,-0.25],[0.82,0.12,-0.65],[0.4,0.02,-0.85]],0.06,C.artery,0.4);
   const om1=tube([[0.92,0.4,-0.15],[1.02,-0.1,-0.1],[0.86,-0.6,-0.05]],0.045,C.artery,0.4);
-  const om2=tube([[0.78,0.18,-0.55],[0.72,-0.3,-0.5],[0.5,-0.8,-0.4]],0.04,C.artery,0.4);
-  const cxGrp=new THREE.Group(); cxGrp.add(cx,om1,om2);
-  tagPart(cxGrp,"circumflex","Ramus circumflexus","Der zweite große Ast der linken Koronararterie. Er verläuft in der linken Kranzfurche um die Seitenwand nach hinten und versorgt mit seinen Randästen (Rami marginales) Seiten- und Hinterwand der linken Kammer.");
-
-  /* ---------- RECHTE KORONARARTERIE + SA-Knoten, Marginal-, PDA-, Posterolateralast ---------- */
+  const cxGrp=new THREE.Group();cxGrp.add(cx,om1);
+  tagPart(cxGrp,"circumflex","Ramus circumflexus","Verläuft in der linken Kranzfurche und versorgt Seiten- und Hinterwand.");
   const rca=tube([[-0.15,0.5,0.15],[-0.72,0.5,0.3],[-1.0,0.25,-0.1],[-0.85,0.0,-0.55],[-0.35,-0.05,-0.8]],0.07,C.artery,0.4);
-  const sa=tube([[-0.55,0.55,0.25],[-0.7,0.9,0.1],[-0.75,1.15,0.0]],0.04,C.artery,0.4);
-  const rmarg=tube([[-0.95,0.15,0.05],[-0.85,-0.5,0.2],[-0.5,-1.1,0.25]],0.05,C.artery,0.4);
   const pda=tube([[-0.35,-0.05,-0.8],[-0.2,-0.7,-0.65],[-0.1,-1.4,-0.45],[-0.02,-1.85,-0.25]],0.055,C.artery,0.4);
-  const plb=tube([[-0.35,-0.05,-0.8],[0.05,0.0,-0.78],[0.35,-0.2,-0.7]],0.04,C.artery,0.4);
-  const rcaGrp=new THREE.Group(); rcaGrp.add(rca,sa,rmarg,pda,plb);
-  tagPart(rcaGrp,"rca","Rechte Koronararterie (RCA)","Läuft in der rechten Kranzfurche. Sie gibt den Sinusknoten-Ast (versorgt den Taktgeber), den rechten Randast, am Herzkreuz die hintere absteigende Arterie (PDA) und den Posterolateralast ab — versorgt rechte Kammer, Hinterwand und hinteres Septum (Rechtsversorgertyp, ~80 %).");
+  const rcaGrp=new THREE.Group();rcaGrp.add(rca,pda);
+  tagPart(rcaGrp,"rca","Rechte Koronararterie (RCA)","Versorgt die rechte Kammer und (meist) die Hinterwand über die hintere absteigende Arterie.");
 
-  /* ---------- HERZVENEN ---------- */
+  /* ---- Herzvenen ---- */
   const gcv=tube([[0.05,-1.9,0.2],[0.0,-1.0,0.45],[0.1,-0.2,0.5],[0.5,0.45,0.2],[0.9,0.3,-0.3]],0.06,C.coroVein,0.45);
   const cs=tube([[0.9,0.3,-0.3],[0.4,0.2,-0.75],[-0.2,0.2,-0.8],[-0.6,0.35,-0.5]],0.1,C.coroVein,0.45);
-  const mcv=tube([[-0.05,-1.8,-0.2],[-0.1,-1.0,-0.5],[-0.2,-0.2,-0.72]],0.05,C.coroVein,0.45);
-  const veinGrp=new THREE.Group(); veinGrp.add(gcv,cs,mcv);
-  tagPart(veinGrp,"coronaryveins","Herzvenen & Sinus coronarius","Die große Herzvene begleitet die LAD, die mittlere Herzvene die PDA. Sie sammeln das verbrauchte Blut der Herzmuskulatur und münden hinten in den Sinus coronarius — eine kurze, weite Vene in den rechten Vorhof.");
+  const veinGrp=new THREE.Group();veinGrp.add(gcv,cs);
+  tagPart(veinGrp,"coronaryveins","Herzvenen & Sinus coronarius","Sammeln das verbrauchte Blut der Herzmuskulatur und münden in den rechten Vorhof.");
 
-  /* ---------- KLAPPEN (innen, beim Aufschneiden sichtbar) ---------- */
+  /* ---- Klappen mit Segeln (innen) ---- */
   const valves=new THREE.Group();
   const ring=(x,y,z,r)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(r,0.05,12,28),mk(C.valve,0.4));t.position.set(x,y,z);t.rotation.x=Math.PI/2;return t;};
-  const cusp=(x,y,z,r)=>{const c=new THREE.Mesh(new THREE.CircleGeometry(r,3),new THREE.MeshStandardMaterial({color:C.valve,roughness:0.4,side:THREE.DoubleSide}));c.position.set(x,y,z);c.rotation.x=-Math.PI/2;return c;};
-  valves.add(ring(-0.4,0.42,0.15,0.2),cusp(-0.4,0.43,0.15,0.16));   // Trikuspidalklappe
-  valves.add(ring(0.45,0.4,-0.15,0.19),cusp(0.45,0.41,-0.15,0.15)); // Mitralklappe
-  valves.add(ring(0.05,0.52,-0.05,0.14));                          // Aortenklappe
-  valves.add(ring(-0.42,0.6,0.42,0.13));                           // Pulmonalklappe
-  tagPart(valves,"valves","Herzklappen","Vier Ventile sorgen für die Einbahnstraße des Blutes: Trikuspidal- und Mitralklappe zwischen Vorhöfen und Kammern, Aorten- und Pulmonalklappe an den Ausgängen. Beim Schließen entsteht das „Lub-Dub“-Herzgeräusch. (Beim Aufschneiden sichtbar.)");
+  const leaflet=(x,y,z,r,rot)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(r,3),new THREE.MeshStandardMaterial({color:C.valve,roughness:0.4,side:THREE.DoubleSide}));m.position.set(x,y,z);m.rotation.set(-Math.PI/2.4,rot,0);return m;};
+  valves.add(ring(-0.4,0.42,0.15,0.2),leaflet(-0.4,0.4,0.15,0.16,0),leaflet(-0.4,0.4,0.15,0.16,2.1),leaflet(-0.4,0.4,0.15,0.16,4.2));
+  valves.add(ring(0.45,0.4,-0.15,0.19),leaflet(0.45,0.38,-0.15,0.15,0.5),leaflet(0.45,0.38,-0.15,0.15,3.6));
+  valves.add(ring(0.05,0.52,-0.05,0.14));valves.add(ring(-0.42,0.6,0.42,0.13));
+  tagPart(valves,"valves","Herzklappen","Vier Ventile als Einbahnstraße des Blutes: Trikuspidal- & Mitralklappe (mit Segeln) zwischen Vorhof und Kammer, Aorten- & Pulmonalklappe an den Ausgängen.");
 
-  /* ---------- INNERE STRUKTUREN (beim Aufschneiden sichtbar) ---------- */
-  const septum=noisyEll(0.13,1.05,0.66,C.myoDark,0.03); septum.position.set(-0.05,-0.35,0.12); septum.rotation.z=0.05;
-  tagPart(septum,"septum","Kammerscheidewand (Septum)","Die muskulöse Wand zwischen linker und rechter Kammer. Sie trennt sauerstoffreiches von sauerstoffarmem Blut. Durch ihren oberen Teil verläuft das Erregungsleitungssystem. (Beim Aufschneiden sichtbar.)");
+  /* ---- Septum + Papillarmuskeln + Sehnenfäden ---- */
+  const septum=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),mk(C.myoDark));septum.scale.set(0.13,1.05,0.66);septum.position.set(-0.05,-0.35,0.12);septum.rotation.z=0.05;
+  tagPart(septum,"septum","Kammerscheidewand (Septum)","Trennt linke und rechte Kammer. Durch ihren oberen Teil läuft das Erregungsleitungssystem.");
   const papGrp=new THREE.Group();
   const pap=(x,y,z)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.42,12),mk(C.myo));m.position.set(x,y,z);return m;};
   papGrp.add(pap(0.25,-0.75,0.05),pap(0.52,-0.6,-0.15),pap(-0.45,-0.7,0.1));
-  papGrp.add(tube([[0.25,-0.55,0.05],[0.35,-0.1,-0.05],[0.4,0.35,-0.12]],0.018,C.valve,0.4));
-  papGrp.add(tube([[0.52,-0.4,-0.15],[0.48,-0.0,-0.14],[0.5,0.35,-0.16]],0.018,C.valve,0.4));
-  papGrp.add(tube([[-0.45,-0.5,0.1],[-0.42,-0.05,0.12],[-0.4,0.4,0.13]],0.018,C.valve,0.4));
-  tagPart(papGrp,"papillary","Papillarmuskeln & Sehnenfäden","Zapfenförmige Muskeln in den Kammern. Über feine Sehnenfäden (Chordae tendineae) halten sie die Segelklappen fest, damit diese beim Pumpen nicht zurückschlagen. (Beim Aufschneiden sichtbar.)");
+  papGrp.add(tube([[0.25,-0.55,0.05],[0.35,-0.1,-0.05],[0.4,0.35,-0.12]],0.016,C.valve,0.4));
+  papGrp.add(tube([[0.52,-0.4,-0.15],[0.48,-0.0,-0.14],[0.5,0.35,-0.16]],0.016,C.valve,0.4));
+  papGrp.add(tube([[-0.45,-0.5,0.1],[-0.42,-0.05,0.12],[-0.4,0.4,0.13]],0.016,C.valve,0.4));
+  tagPart(papGrp,"papillary","Papillarmuskeln & Sehnenfäden","Halten über feine Sehnenfäden (Chordae) die Segelklappen, damit sie beim Pumpen nicht zurückschlagen.");
 
-  g.add(myocardium,leftAtrium,rightAtrium,aortaGrp,pulmGrp,cavae,pv,lca,cxGrp,rcaGrp,veinGrp,septum,papGrp,valves);
+  g.add(ventGroup,leftAtrium,rightAtrium,aortaGrp,pulmGrp,cavae,pv,lca,cxGrp,rcaGrp,veinGrp,septum,papGrp,valves);
+
+  /* ---- Teardown-Richtungen (Explosionsansicht wie ein Geräte-Teardown) ---- */
+  const EX={ventricles:[0,-0.2,-1.9],valves:[0,1.7,0.3],septum:[1.5,0.3,0.3],papillary:[0,-1.6,0.6],
+    la:[0.9,1.5,-0.5],ra:[-1.1,1.4,-0.3],aorta:[0.4,2.0,-0.7],pulmonary:[-0.6,1.7,0.5],
+    cavae:[-1.6,0.9,0.0],pulmveins:[1.5,1.0,-0.6],lad:[0.1,-0.3,1.9],circumflex:[1.8,0.2,0.6],
+    rca:[-1.8,0.2,0.6],coronaryveins:[0.2,-0.3,-1.9]};
+  g.children.forEach(c=>{if(c.userData.part&&EX[c.userData.part.partId])c.userData.explodeVec=new THREE.Vector3(...EX[c.userData.part.partId]);});
+
   return {group:g,zoom:9,spin:0.0035};
 }
 
-const INTRO="Das Herz ist ein faustgroßer Muskel, der unermüdlich Blut durch den Körper pumpt — rund 100.000 Mal am Tag. Es hat vier Räume, vier Klappen und wird von den Herzkranzgefäßen selbst versorgt. Der Herzmuskel ist hier zu einer organischen Form mit zulaufender Spitze geformt; die Kranzgefäße liegen in den Oberflächenfurchen. Klick die Strukturen an — oder schneide das Herz auf, um Klappen, Septum und Papillarmuskeln innen zu sehen.";
+const INTRO="Das Herz pumpt rund 100.000 Mal am Tag Blut durch den Körper. Vier Räume, vier Klappen, eigene Versorgung über die Kranzgefäße. Wähle unten ein Instrument zum Operieren, oder ziehe es im Teardown-Modus in seine Einzelteile auseinander, um die Klappen und Papillarmuskeln im Inneren zu sehen.";
 
 /* =====================================================================
-   4) VIEWER — Szene, Steuerung, Aufschneiden, Herzschlag, Kamera
+   4) VIEWER + INSTRUMENTE
    ===================================================================== */
 const sceneEl=document.getElementById("scene");
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
@@ -334,40 +327,126 @@ const clipPlane=new THREE.Plane(new THREE.Vector3(0,0,-1),5);
 let targetRotX=0,targetRotY=0;
 const ZOOM_MIN=4,ZOOM_MAX=16;
 let autoRotate=true,beating=true,interacting=false;
-let openMode="cut";
-let targetOpen=0,curOpen=0;
+let openMode="cut";let targetOpen=0,curOpen=0;
 
 const built=buildHeart();
 const spin=built.spin, defaultZoom=built.zoom;
 let targetZoom=defaultZoom;
 camera.position.set(0,0,defaultZoom);
 group.add(built.group);
-group.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.side=THREE.DoubleSide;m.clippingPlanes=[clipPlane];m.clipShadows=true;});}});
-const topParts=built.group.children.filter(c=>c.userData&&c.userData.part).map(c=>({obj:c,base:c.position.clone()}));
+function applyClip(o){if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.side=THREE.DoubleSide;m.clippingPlanes=[clipPlane];m.clipShadows=true;});}}
+group.traverse(applyClip);
+const topParts=built.group.children.filter(c=>c.userData&&c.userData.part).map(c=>({obj:c,base:c.position.clone(),ex:c.userData.explodeVec||c.position.clone().normalize().multiplyScalar(1.5)}));
 
+// Schnittspuren-Schicht (rotiert mit dem Herz)
+const incisionLayer=new THREE.Group();built.group.add(incisionLayer);
+const incMat=new THREE.MeshStandardMaterial({color:0xff3344,emissive:0x7a0010,roughness:0.5,clippingPlanes:[clipPlane],side:THREE.DoubleSide});
+let lastMark=null,markCount=0;
+function addMark(worldPoint,kind){
+  if(markCount>70)return;
+  const local=built.group.worldToLocal(worldPoint.clone());
+  if(lastMark&&local.distanceTo(lastMark)<0.06)return;
+  lastMark=local.clone();markCount++;
+  let m;
+  if(kind==="clamp"){m=new THREE.Mesh(new THREE.TorusGeometry(0.09,0.03,8,16),new THREE.MeshStandardMaterial({color:0xdfe6ee,metalness:0.8,roughness:0.3,clippingPlanes:[clipPlane],side:THREE.DoubleSide}));}
+  else{m=new THREE.Mesh(new THREE.SphereGeometry(0.045,10,8),incMat);}
+  m.position.copy(local);incisionLayer.add(m);
+}
+
+/* ---- Instrumente ---- */
+function buildInstruments(){
+  const steel=new THREE.MeshStandardMaterial({color:0xdfe6ee,roughness:0.25,metalness:0.9});
+  const handle=new THREE.MeshStandardMaterial({color:0x222b35,roughness:0.5,metalness:0.5});
+  const inst={};
+  const scalpel=new THREE.Group();
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.85,16),handle);sh.rotation.z=Math.PI/2;sh.position.x=-0.45;scalpel.add(sh);
+  const blade=new THREE.Mesh(new THREE.BoxGeometry(0.36,0.16,0.012),steel);blade.position.set(0.1,0.03,0);scalpel.add(blade);
+  scalpel.userData.tip=new THREE.Vector3(0.3,-0.02,0);inst.scalpel=scalpel;
+  const clamp=new THREE.Group();
+  const chh=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,0.6,12),handle);chh.rotation.z=Math.PI/2;chh.position.x=-0.42;clamp.add(chh);
+  const pr1=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.03,0.03),steel);pr1.position.set(0.05,0.05,0);pr1.rotation.z=-0.18;clamp.add(pr1);
+  const pr2=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.03,0.03),steel);pr2.position.set(0.05,-0.05,0);pr2.rotation.z=0.18;clamp.add(pr2);
+  clamp.userData.tip=new THREE.Vector3(0.28,0,0);inst.clamp=clamp;
+  const probe=new THREE.Group();
+  const prb=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.8,12),steel);prb.rotation.z=Math.PI/2;prb.position.x=-0.3;probe.add(prb);
+  const ball=new THREE.Mesh(new THREE.SphereGeometry(0.05,16,12),steel);ball.position.x=0.14;probe.add(ball);
+  probe.userData.tip=new THREE.Vector3(0.18,0,0);inst.probe=probe;
+  for(const k in inst){inst[k].visible=false;inst[k].rotation.set(0.25,-0.35,-0.6);scene.add(inst[k]);}
+  return inst;
+}
+const instruments=buildInstruments();
+let activeTool="none";
+const pointer={x:0,y:0};         // NDC
+let mouseTrigger=false,handTrigger=false;
+const _ray=new THREE.Raycaster();const _vtmp=new THREE.Vector3();
+function pointerToWorldOnZ0(){
+  _vtmp.set(pointer.x,pointer.y,0.5).unproject(camera);
+  const dir=_vtmp.sub(camera.position).normalize();
+  const dist=(0-camera.position.z)/dir.z;
+  return camera.position.clone().add(dir.multiplyScalar(dist));
+}
+function updateInstrument(){
+  for(const k in instruments)instruments[k].visible=(k===activeTool);
+  if(activeTool==="none")return;
+  const tool=instruments[activeTool];
+  const target=pointerToWorldOnZ0();
+  const rTip=tool.userData.tip.clone().applyEuler(tool.rotation);
+  tool.position.copy(target).sub(rTip);
+  tool.userData.tipWorld=target;
+}
+function raycastHeart(){
+  _ray.setFromCamera(new THREE.Vector2(pointer.x,pointer.y),camera);
+  const hits=_ray.intersectObjects(built.group.children,true);
+  for(const h of hits){let o=h.object;while(o&&!(o.userData&&o.userData.part))o=o.parent;if(o&&o.userData.part)return{part:o.userData.part,point:h.point};}
+  return null;
+}
+let probeThrottle=0,clampEdge=false;
+function operate(){
+  const hit=raycastHeart();if(!hit)return;
+  if(activeTool==="scalpel"){
+    openMode="cut";targetOpen=Math.min(1,targetOpen+0.012);openBtn.classList.add("active");
+    addMark(hit.point,"cut");
+  } else if(activeTool==="probe"){
+    const now=performance.now();if(now-probeThrottle>500){probeThrottle=now;openPanel(hit.part);}
+  } else if(activeTool==="clamp"){
+    if(!clampEdge){clampEdge=true;addMark(hit.point,"clamp");}
+  }
+}
+
+/* ---- Maus / Trackpad ---- */
 let dragging=false,lastMX=0,lastMY=0,moved=0;
-renderer.domElement.addEventListener("pointerdown",e=>{dragging=true;moved=0;lastMX=e.clientX;lastMY=e.clientY;});
-window.addEventListener("pointerup",e=>{if(dragging&&moved<6)tryPick(e.clientX,e.clientY);dragging=false;});
-window.addEventListener("pointermove",e=>{if(!dragging)return;moved+=Math.abs(e.clientX-lastMX)+Math.abs(e.clientY-lastMY);interacting=true;targetRotY+=(e.clientX-lastMX)*0.006;targetRotX+=(e.clientY-lastMY)*0.006;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastMX=e.clientX;lastMY=e.clientY;});
+function setPointerFromClient(cx,cy){pointer.x=(cx/window.innerWidth)*2-1;pointer.y=1-(cy/window.innerHeight)*2;}
+renderer.domElement.addEventListener("pointerdown",e=>{dragging=true;moved=0;lastMX=e.clientX;lastMY=e.clientY;setPointerFromClient(e.clientX,e.clientY);if(activeTool!=="none"){mouseTrigger=true;}});
+window.addEventListener("pointerup",e=>{if(dragging&&moved<6&&activeTool==="none")tryPick(e.clientX,e.clientY);dragging=false;mouseTrigger=false;clampEdge=false;});
+window.addEventListener("pointermove",e=>{setPointerFromClient(e.clientX,e.clientY);if(!dragging)return;moved+=Math.abs(e.clientX-lastMX)+Math.abs(e.clientY-lastMY);if(activeTool!=="none"){lastMX=e.clientX;lastMY=e.clientY;return;}interacting=true;targetRotY+=(e.clientX-lastMX)*0.006;targetRotX+=(e.clientY-lastMY)*0.006;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastMX=e.clientX;lastMY=e.clientY;});
 renderer.domElement.addEventListener("wheel",e=>{e.preventDefault();interacting=true;targetZoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,targetZoom+e.deltaY*0.005));},{passive:false});
 
+/* ---- Buttons ---- */
 const rotBtn=document.getElementById("rotbtn");
 rotBtn.addEventListener("click",()=>{autoRotate=!autoRotate;rotBtn.classList.toggle("active",autoRotate);});
 const beatBtn=document.getElementById("beatbtn");
 beatBtn.addEventListener("click",()=>{beating=!beating;beatBtn.classList.toggle("active",beating);if(!beating)group.scale.setScalar(1);});
-document.getElementById("resetbtn").addEventListener("click",()=>{targetRotX=0;targetRotY=0;targetZoom=defaultZoom;targetOpen=0;});
+document.getElementById("resetbtn").addEventListener("click",()=>{targetRotX=0;targetRotY=0;targetZoom=defaultZoom;targetOpen=0;incisionLayer.clear();markCount=0;lastMark=null;});
 const openBtn=document.getElementById("openbtn");
 openBtn.addEventListener("click",()=>{targetOpen=targetOpen>0.05?0:1;openBtn.classList.toggle("active",targetOpen>0.05);});
 const modeBtn=document.getElementById("modebtn");
-modeBtn.addEventListener("click",()=>{openMode=openMode==="cut"?"explode":"cut";modeBtn.textContent="Modus: "+(openMode==="cut"?"Schnitt":"Teile");});
+modeBtn.addEventListener("click",()=>{openMode=openMode==="cut"?"explode":"cut";modeBtn.textContent="Modus: "+(openMode==="cut"?"Schnitt":"Teardown");});
+// Instrumenten-Auswahl
+const legendInner=document.getElementById("legendInner");
+const legendTool='<div><span class="k">Zeigefinger</span> <span class="sep">&#8594;</span> Instrument führen</div><div><span class="k">Pinch</span> <span class="sep">&#8594;</span> anwenden</div><div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div>';
+const legendView='<div><span class="k">Pinch</span> <span class="sep">&#8594;</span> drehen</div><div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div><div><span class="k">2 Hände + Pinch</span> <span class="sep">&#8594;</span> auseinanderziehen</div><div><span class="k">Klick</span> <span class="sep">&#8594;</span> Struktur-Info</div>';
+document.querySelectorAll(".tool").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tool").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+  activeTool=b.dataset.tool;legendInner.innerHTML=activeTool==="none"?legendView:legendTool;
+}));
 
-const raycaster=new THREE.Raycaster();const mouse=new THREE.Vector2();
+/* ---- Info-Panel (Klick) ---- */
 const panel=document.getElementById("panel");
 const pTitle=document.getElementById("ptitle"),pInfo=document.getElementById("pinfo");
 const pNote=document.getElementById("pnote"),pSaved=document.getElementById("saved");
 const pHead=document.getElementById("phead"),noteWrap=document.getElementById("note-wrap");
 let currentPartId=null;
-function tryPick(x,y){mouse.x=(x/window.innerWidth)*2-1;mouse.y=-(y/window.innerHeight)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(group.children,true);for(const h of hits){let o=h.object;while(o&&!(o.userData&&o.userData.part))o=o.parent;if(o&&o.userData.part){openPanel(o.userData.part);return;}}}
+function tryPick(x,y){pointer.x=(x/window.innerWidth)*2-1;pointer.y=1-(y/window.innerHeight)*2;const hit=raycastHeart();if(hit)openPanel(hit.part);}
 function noteKey(id){return "anote:heart:"+id;}
 function openPanel(part){
   currentPartId=part.partId;pTitle.textContent=part.label;pInfo.textContent=part.info;
@@ -380,54 +459,48 @@ document.getElementById("pclose").addEventListener("click",()=>panel.classList.r
 document.getElementById("infobtn").addEventListener("click",()=>openPanel({partId:null,label:"Menschliches Herz",info:INTRO,overview:true}));
 setTimeout(()=>openPanel({partId:null,label:"Menschliches Herz",info:INTRO,overview:true}),400);
 
+/* ---- Render-Schleife ---- */
 const _v=new THREE.Vector3();
 function animate(){
   requestAnimationFrame(animate);
-  if(autoRotate&&!interacting)targetRotY+=spin;
+  if(autoRotate&&!interacting&&activeTool==="none")targetRotY+=spin;
   group.rotation.x+=(targetRotX-group.rotation.x)*0.12;
   group.rotation.y+=(targetRotY-group.rotation.y)*0.12;
   camera.position.z+=(targetZoom-camera.position.z)*0.12;
   curOpen+=(targetOpen-curOpen)*0.12;
   if(openMode==="cut"){clipPlane.constant=5-curOpen*5.5;topParts.forEach(p=>p.obj.position.copy(p.base));}
-  else{clipPlane.constant=5;topParts.forEach(p=>{const dir=p.base.length()>0.001?_v.copy(p.base).normalize():_v.set(0,1,0);p.obj.position.copy(p.base).add(dir.multiplyScalar(curOpen*1.5));});}
-  if(beating){const t=performance.now()/1000*(72/60);const ph=t%1;const pulse=Math.exp(-((ph)*(ph))/0.004)+0.6*Math.exp(-((ph-0.28)*(ph-0.28))/0.004);group.scale.setScalar(1+0.045*pulse);}
+  else{clipPlane.constant=5;topParts.forEach(p=>{p.obj.position.copy(p.base).add(_v.copy(p.ex).multiplyScalar(curOpen));});}
+  if(beating&&activeTool==="none"){const t=performance.now()/1000*(72/60);const ph=t%1;const pulse=Math.exp(-((ph)*(ph))/0.004)+0.6*Math.exp(-((ph-0.28)*(ph-0.28))/0.004);group.scale.setScalar(1+0.045*pulse);}
+  group.updateMatrixWorld();
+  updateInstrument();
+  if(activeTool!=="none"&&(mouseTrigger||handTrigger))operate();
   interacting=false;
   renderer.render(scene,camera);
 }
 animate();
 window.addEventListener("resize",()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
 
-/* ---- EKG-Panel: Daten-Button + live Kardiogramm ---- */
+/* ---- EKG-Panel ---- */
 const infoPanel=document.getElementById("info");
 document.getElementById("databtn").addEventListener("click",()=>infoPanel.classList.toggle("show"));
 document.getElementById("iclose").addEventListener("click",()=>infoPanel.classList.remove("show"));
 (function ekg(){
   const c=document.getElementById("ekg");const x=c.getContext("2d");
-  function fit(){c.width=c.clientWidth||240;c.height=c.clientHeight||70;}
-  fit();window.addEventListener("resize",fit);
+  function fit(){c.width=c.clientWidth||240;c.height=c.clientHeight||70;}fit();window.addEventListener("resize",fit);
   const data=[];let phase=0;
   const beat=p=>{const gg=(cc,w,h)=>h*Math.exp(-((p-cc)*(p-cc))/(2*w*w));return gg(0.14,0.018,0.12)-gg(0.30,0.008,0.18)+gg(0.33,0.006,0.95)-gg(0.36,0.010,0.32)+gg(0.56,0.04,0.28);};
-  function draw(){
-    requestAnimationFrame(draw);
-    const w=c.width,h=c.height;phase+=0.006;data.push(beat(phase%1));while(data.length>w)data.shift();
-    x.clearRect(0,0,w,h);
-    x.strokeStyle="rgba(45,212,191,.07)";x.lineWidth=1;
-    for(let gx=0;gx<w;gx+=14){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,h);x.stroke();}
-    x.strokeStyle="#2dd4bf";x.lineWidth=2;x.beginPath();
-    const mid=h*0.6,amp=h*0.4;
-    for(let i=0;i<data.length;i++){const yy=mid-data[i]*amp;if(i===0)x.moveTo(0,yy);else x.lineTo(i,yy);}
-    x.stroke();
-  }
+  function draw(){requestAnimationFrame(draw);const w=c.width,h=c.height;phase+=0.006;data.push(beat(phase%1));while(data.length>w)data.shift();x.clearRect(0,0,w,h);x.strokeStyle="rgba(45,212,191,.07)";x.lineWidth=1;for(let gx=0;gx<w;gx+=14){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,h);x.stroke();}x.strokeStyle="#2dd4bf";x.lineWidth=2;x.beginPath();const mid=h*0.6,amp=h*0.4;for(let i=0;i<data.length;i++){const yy=mid-data[i]*amp;if(i===0)x.moveTo(0,yy);else x.lineTo(i,yy);}x.stroke();}
   draw();
 })();
 
 /* =====================================================================
-   5) HAND-TRACKING (MediaPipe)
+   5) HAND-TRACKING (optimiert: Zeigefinger-Pointer + Pinch-Trigger)
    ===================================================================== */
 const video=document.getElementById("video"),overlay=document.getElementById("overlay"),octx=overlay.getContext("2d");
 const camState=document.getElementById("camstate"),handState=document.getElementById("handstate"),dot=document.getElementById("dot"),errEl=document.getElementById("err");
 let handLandmarker=null,lastVideoTime=-1,pinching=false,lastPX=0,lastPY=0,twoStartDist=null,twoStartZoom=null,openStartDist=null,openStartVal=null;
-const fPX=new OneEuro(),fPY=new OneEuro(),fDist=new OneEuro(1.0,0.01),fOpen=new OneEuro(1.0,0.01);
+const fPX=new OneEuro(1.0,0.015),fPY=new OneEuro(1.0,0.015),fDist=new OneEuro(1.0,0.01),fOpen=new OneEuro(1.0,0.01);
+const fTipX=new OneEuro(1.6,0.008),fTipY=new OneEuro(1.6,0.008);
 const CONN=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 const d2=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
@@ -435,25 +508,28 @@ async function startCamera(){
   errEl.textContent="";
   try{
     const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm");
-    handLandmarker=await HandLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numHands:2});
-    const stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:"user"}});
+    handLandmarker=await HandLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numHands:2,minHandDetectionConfidence:0.6,minTrackingConfidence:0.6});
+    const stream=await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720,facingMode:"user"}});
     video.srcObject=stream;await video.play();
-    overlay.width=video.videoWidth||640;overlay.height=video.videoHeight||480;
+    overlay.width=video.videoWidth||1280;overlay.height=video.videoHeight||720;
     document.getElementById("cam").classList.remove("hidden");camState.textContent="an";dot.classList.add("live");detectLoop();
   }catch(e){console.error(e);errEl.textContent="Kamera/Modell-Fehler: "+(e.message||e);}
 }
 function detectLoop(){if(handLandmarker&&video.readyState>=2&&video.currentTime!==lastVideoTime){lastVideoTime=video.currentTime;handleHands(handLandmarker.detectForVideo(video,performance.now()));}requestAnimationFrame(detectLoop);}
 function handleHands(res){
   const hands=res.landmarks||[];handState.textContent=hands.length;
-  octx.clearRect(0,0,overlay.width,overlay.height);octx.strokeStyle="rgba(45,212,191,.7)";octx.fillStyle="#aef7ec";octx.lineWidth=2;
-  for(const lm of hands){for(const [a,b] of CONN){octx.beginPath();octx.moveTo(lm[a].x*overlay.width,lm[a].y*overlay.height);octx.lineTo(lm[b].x*overlay.width,lm[b].y*overlay.height);octx.stroke();}for(const p of lm){octx.beginPath();octx.arc(p.x*overlay.width,p.y*overlay.height,3,0,6.28);octx.fill();}}
+  octx.clearRect(0,0,overlay.width,overlay.height);octx.lineWidth=2;
+  for(const lm of hands){octx.strokeStyle="rgba(45,212,191,.7)";octx.fillStyle="#aef7ec";for(const [a,b] of CONN){octx.beginPath();octx.moveTo(lm[a].x*overlay.width,lm[a].y*overlay.height);octx.lineTo(lm[b].x*overlay.width,lm[b].y*overlay.height);octx.stroke();}for(const p of lm){octx.beginPath();octx.arc(p.x*overlay.width,p.y*overlay.height,3,0,6.28);octx.fill();}
+    // Zeigefinger-Reticle
+    octx.strokeStyle="#f5a524";octx.beginPath();octx.arc(lm[8].x*overlay.width,lm[8].y*overlay.height,9,0,6.28);octx.stroke();}
   const now=performance.now();
+  handTrigger=false;
   if(hands.length>=2){
     pinching=false;
     const sizeA=Math.max(d2(hands[0][0],hands[0][9]),1e-4),sizeB=Math.max(d2(hands[1][0],hands[1][9]),1e-4);
     const pinA=d2(hands[0][4],hands[0][8])/sizeA,pinB=d2(hands[1][4],hands[1][8])/sizeB;
     const wristDist=d2(hands[0][0],hands[1][0]);
-    if(pinA<0.45&&pinB<0.45){
+    if(pinA<0.45&&pinB<0.45&&activeTool==="none"){
       twoStartDist=null;const d=fOpen.filter(wristDist,now);
       if(openStartDist===null){openStartDist=d;openStartVal=targetOpen;}
       interacting=true;targetOpen=Math.max(0,Math.min(1,openStartVal+(d-openStartDist)*2.2));
@@ -468,10 +544,18 @@ function handleHands(res){
   twoStartDist=null;openStartDist=null;
   if(hands.length===1){
     const lm=hands[0];const handSize=Math.max(d2(lm[0],lm[9]),1e-4);const ratio=d2(lm[4],lm[8])/handSize;
-    const px=fPX.filter(1-(lm[4].x+lm[8].x)/2,now),py=fPY.filter((lm[4].y+lm[8].y)/2,now);
-    if(!pinching&&ratio<0.40){pinching=true;lastPX=px;lastPY=py;}
-    else if(pinching&&ratio>0.55){pinching=false;}
-    if(pinching){interacting=true;targetRotY+=(px-lastPX)*5.0;targetRotX+=(py-lastPY)*5.0;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastPX=px;lastPY=py;}
+    if(activeTool!=="none"){
+      const tx=fTipX.filter(lm[8].x,now),ty=fTipY.filter(lm[8].y,now);
+      pointer.x=1-2*tx;pointer.y=1-2*ty;
+      if(!pinching&&ratio<0.40)pinching=true;else if(pinching&&ratio>0.55)pinching=false;
+      handTrigger=pinching;if(handTrigger)clampEdge=clampEdge; // edge handled in operate via clampEdge reset on release
+      if(!pinching)clampEdge=false;
+    } else {
+      const px=fPX.filter(1-(lm[4].x+lm[8].x)/2,now),py=fPY.filter((lm[4].y+lm[8].y)/2,now);
+      if(!pinching&&ratio<0.40){pinching=true;lastPX=px;lastPY=py;}
+      else if(pinching&&ratio>0.55){pinching=false;}
+      if(pinching){interacting=true;targetRotY+=(px-lastPX)*5.0;targetRotX+=(py-lastPY)*5.0;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastPX=px;lastPY=py;}
+    }
     return;
   }
   pinching=false;
