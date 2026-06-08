@@ -3,23 +3,520 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Menschliches Gehirn — Anatomie Explorer</title>
+<title>Menschliches Gehirn — Anatomie Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#070b0f;--bg2:#0d141b;--accent:#2dd4bf;--accent-dim:#155e57;--text:#e6f1ef;--text-dim:#6b8a86;--warn:#f5a524;--line:rgba(45,212,191,.18)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace}
+  #scene{position:fixed;inset:0;z-index:1}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,rgba(45,212,191,.08),transparent 55%),radial-gradient(circle at 80% 90%,rgba(124,156,255,.06),transparent 55%)}
+  .hud{position:fixed;z-index:10;pointer-events:none}
+  #top{top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 22px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .back{pointer-events:auto;text-decoration:none;color:var(--text-dim);font-size:18px;border:1px solid var(--line);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:.2s}
+  .back:hover{color:var(--accent);border-color:var(--accent)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--text-dim);transition:.3s}
+  .dot.live{background:var(--accent);box-shadow:0 0 12px 1px var(--accent);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .brand h1{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+  .brand span{font-size:11px;color:var(--text-dim);letter-spacing:1px}
+  #status{font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:right;line-height:1.6}
+  #status b{color:var(--accent);font-weight:500}
+  #legend{bottom:20px;left:22px;font-size:11px;color:var(--text-dim);line-height:1.9;letter-spacing:.5px;max-width:250px}
+  #legend .k{color:var(--text)} #legend .sep{color:var(--accent-dim)}
+  #cam{bottom:20px;right:22px;width:200px;height:150px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2)}
+  #cam.hidden{display:none}
+  #video,#overlay{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1)}
+  #video{object-fit:cover}
+  #camlabel{position:absolute;top:6px;left:8px;z-index:2;font-size:9px;letter-spacing:1px;color:var(--accent);text-shadow:0 0 6px var(--bg)}
+  #tools{top:64px;right:22px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;max-height:calc(100vh - 90px);overflow:auto}
+  .btn{pointer-events:auto;font-family:inherit;font-size:11px;letter-spacing:1px;color:var(--text);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;white-space:nowrap}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.active{border-color:var(--accent);color:var(--accent)}
+  .btn.warnactive{border-color:var(--warn);color:var(--warn)}
+  .side{position:fixed;z-index:12;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+  .side.show{opacity:1;pointer-events:auto}
+  .side h4{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+  .xclose{position:absolute;top:10px;right:12px;cursor:pointer;color:var(--text-dim);background:none;border:none;font-size:18px;font-family:inherit}
+  .xclose:hover{color:var(--text)}
+  #panel{top:50%;right:22px;transform:translateY(-50%);width:300px}
+  #panel .ph{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  #panel .ph .pdot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
+  #panel .ph.ov .pdot{background:var(--accent)}
+  #panel h3{font-size:15px;font-weight:700}
+  #panel .pinfo{font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px}
+  #panel .pinfo b{color:var(--text)}
+  #note-wrap label{font-size:10px;letter-spacing:1px;color:var(--accent);text-transform:uppercase}
+  #panel textarea{width:100%;margin-top:6px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px;resize:vertical;min-height:54px}
+  #panel textarea:focus{outline:none;border-color:var(--accent)}
+  #saved{font-size:10px;color:var(--accent);margin-top:6px;height:12px;letter-spacing:1px}
+  #values{top:50%;left:22px;transform:translateY(-50%);width:262px}
+  #eeg{width:100%;height:64px;display:block;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+  #values .row{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:var(--text-dim);padding:4px 0;border-bottom:1px solid rgba(45,212,191,.07)}
+  #values .row b{color:var(--text)}
+  #values .hrline{margin:10px 0 4px;font-size:11px;color:var(--text-dim);letter-spacing:1px}
+  #values input[type=range]{width:100%;accent-color:var(--accent)}
+  #values .mini{display:flex;gap:6px;margin:8px 0 4px}
+  #values .mini .btn{flex:1;justify-content:center;padding:6px}
+  #layers{top:64px;left:22px;width:240px}
+  #layers .lay{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid rgba(45,212,191,.07);font-size:12px;cursor:pointer}
+  #layers .lay:last-child{border-bottom:none}
+  #layers .sw{width:34px;height:18px;border-radius:9px;background:#243;position:relative;transition:.2s;flex:0 0 auto}
+  #layers .sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#6b8a86;transition:.2s}
+  #layers .lay.on .sw{background:var(--accent-dim)}
+  #layers .lay.on .sw::after{left:18px;background:var(--accent)}
+  #layers .swatch{width:10px;height:10px;border-radius:2px;flex:0 0 auto}
+  #layers .name{flex:1;color:var(--text)}
+  #section{bottom:74px;left:50%;transform:translateX(-50%);width:300px;display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:opacity .25s}
+  #section.show{opacity:1;pointer-events:auto}
+  #section input{flex:1;accent-color:var(--accent)}
+  #section span{font-size:10px;color:var(--text-dim);letter-spacing:1px}
+  #banner{top:14px;left:50%;transform:translateX(-50%);background:rgba(245,165,36,.12);border:1px solid var(--warn);color:var(--warn);font-size:11px;letter-spacing:.5px;padding:8px 14px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:80vw;text-align:center}
+  #banner.show{opacity:1}
+  #gate{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px;background:radial-gradient(circle at 50% 40%,rgba(13,20,27,.6),var(--bg));backdrop-filter:blur(2px)}
+  #gate.gone{opacity:0;pointer-events:none;transition:opacity .6s}
+  #gate h2{font-size:22px;font-weight:700}
+  #gate p{font-size:13px;color:var(--text-dim);max-width:470px;line-height:1.7}
+  #start{pointer-events:auto;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bg);background:var(--accent);border:none;border-radius:8px;padding:14px 34px;cursor:pointer;box-shadow:0 0 30px rgba(45,212,191,.4);transition:.2s}
+  #start:hover{transform:translateY(-2px);box-shadow:0 0 44px rgba(45,212,191,.6)}
+  #skip{pointer-events:auto;background:none;border:none;cursor:pointer;color:var(--text-dim);font-family:inherit;font-size:11px;letter-spacing:1px;text-decoration:underline;text-underline-offset:4px}
+  #skip:hover{color:var(--text)}
+  #err{color:var(--warn);font-size:12px;min-height:16px;max-width:470px}
+  @media(max-width:680px){#cam{width:120px;height:90px}#panel,#values,#layers{width:calc(100% - 30px);left:15px;right:15px;top:auto;bottom:120px;transform:none}#tools{top:56px;right:10px}#legend{display:none}#section{width:90vw}}
+</style>
 <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
 </script>
 </head>
 <body>
+  <div id="scene"></div>
+  <div id="top" class="hud">
+    <div class="brand">
+      <a class="back" href="index.html" title="Übersicht">&#8592;</a>
+      <div class="dot" id="dot"></div>
+      <div><h1>Menschliches Gehirn</h1><span>Rinde · Lappen · tiefe Areale · Handtracking</span></div>
+    </div>
+    <div id="status">Kamera: <b id="camstate">aus</b><br>Hände: <b id="handstate">0</b></div>
+  </div>
+
+  <div id="tools" class="hud">
+    <button class="btn" id="infobtn">&#9432; Überblick</button>
+    <button class="btn" id="layerbtn">&#9783; Schichten</button>
+    <button class="btn" id="openbtn">&#9697; Auseinanderziehen</button>
+    <button class="btn" id="sectionbtn">&#9707; Schnittebene</button>
+    <button class="btn" id="clinbtn">&#9888; Tumor zeigen</button>
+    <button class="btn active" id="rotbtn">&#8635; Auto-Drehung</button>
+    <button class="btn" id="databtn">&#9636; EEG &amp; Fakten</button>
+    <button class="btn" id="resetbtn">&#8634; Zurücksetzen</button>
+  </div>
+
+  <div id="legend" class="hud">
+    <div><span class="k">Pinch</span> <span class="sep">&#8594;</span> drehen</div>
+    <div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div>
+    <div><span class="k">2 Hände + Pinch auseinander</span> <span class="sep">&#8594;</span> Teardown</div>
+    <div><span class="k">Klick auf ein Teil</span> <span class="sep">&#8594;</span> Wissen</div>
+  </div>
+
+  <div id="cam" class="hud hidden">
+    <span id="camlabel">LIVE</span>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+
+  <div id="layers" class="side hud">
+    <button class="xclose" id="layerclose">&times;</button>
+    <h4>Schichten</h4>
+    <div id="layerlist"></div>
+  </div>
+
+  <div id="panel" class="side hud">
+    <button class="xclose" id="pclose">&times;</button>
+    <div class="ph" id="phead"><span class="pdot"></span><h3 id="ptitle"></h3></div>
+    <p class="pinfo" id="pinfo"></p>
+    <div id="note-wrap"><label>Deine Notiz</label>
+      <textarea id="pnote" placeholder="z.B. für die Klausur merken..."></textarea>
+      <div id="saved"></div></div>
+  </div>
+
+  <div id="values" class="side hud">
+    <button class="xclose" id="iclose">&times;</button>
+    <h4>EEG &amp; Fakten</h4>
+    <canvas id="eeg"></canvas>
+    <div class="hrline">Zustand: <b id="wakeval">wach (Beta)</b></div>
+    <input type="range" id="wake" min="0" max="100" value="70">
+    <div class="mini">
+      <button class="btn" id="sleepbtn">Schlaf</button>
+      <button class="btn" id="awakebtn">Wach</button>
+    </div>
+    <div class="row"><span>Neuronen</span><b>~86 Milliarden</b></div>
+    <div class="row"><span>Synapsen</span><b>~100 Billionen</b></div>
+    <div class="row"><span>Gewicht</span><b>~1,4 kg</b></div>
+    <div class="row"><span>Energieanteil</span><b>~20%</b></div>
+    <div class="row"><span>Rindendicke</span><b>2–4 mm</b></div>
+  </div>
+
+  <div id="section" class="hud">
+    <span>oben</span><input type="range" id="sectionslider" min="-100" max="100" value="0"><span>unten</span>
+  </div>
+
+  <div id="banner" class="hud"></div>
+
+  <div id="gate">
+    <h2>Menschliches Gehirn — Anatomie-Lab</h2>
+    <p>Klick auf jede Region zeigt, wofür sie zuständig ist (Funktion, Klinik, Merksatz). „Schichten" blendet Systeme ein/aus, „Auseinanderziehen" legt die tiefen Areale (Thalamus, Hippocampus, Hirnstamm …) frei, „Tumor zeigen" demonstriert, wie ein Hirntumor wächst. Mit der Hand: Pinch dreht, zwei Hände zoomen. Maus & Trackpad gehen immer auch.</p>
+    <button id="start">Kamera starten</button>
+    <button id="skip">Ohne Kamera ansehen (nur Maus)</button>
+    <div id="err"></div>
+  </div>
+
 <script type="module">
-  import { mountViewer } from "./engine.js";
-  mountViewer({ preset: "brain" });
+import * as THREE from "three";
+import { HandLandmarker, FilesetResolver }
+  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12";
+
+/* =====================================================================
+   1) One-Euro-Filter
+   ===================================================================== */
+class LowPass { constructor(){this.s=null;} filter(x,a){this.s=(this.s===null)?x:a*x+(1-a)*this.s;return this.s;} }
+class OneEuro {
+  constructor(minCutoff=1.2,beta=0.02,dCutoff=1.0){this.minCutoff=minCutoff;this.beta=beta;this.dCutoff=dCutoff;this.xPrev=null;this.tPrev=null;this.xF=new LowPass();this.dxF=new LowPass();}
+  alpha(c,dt){const tau=1/(2*Math.PI*c);return 1/(1+tau/dt);}
+  filter(x,t){if(this.tPrev===null){this.tPrev=t;this.xPrev=x;return x;}let dt=(t-this.tPrev)/1000;if(dt<=0)dt=1/60;const dx=(x-this.xPrev)/dt;const edx=this.dxF.filter(dx,this.alpha(this.dCutoff,dt));const cutoff=this.minCutoff+this.beta*Math.abs(edx);const fx=this.xF.filter(x,this.alpha(cutoff,dt));this.xPrev=x;this.tPrev=t;return fx;}
+}
+function tagPart(obj,id,label,info){obj.traverse(o=>{o.userData.part={partId:id,label,info};});obj.userData.part={partId:id,label,info};return obj;}
+
+/* =====================================================================
+   2) DAS GEHIRN
+   ===================================================================== */
+function buildBrain(){
+  const g=new THREE.Group();
+  const V=a=>new THREE.Vector3(a[0],a[1],a[2]);
+  const tissue=(c,o={})=>new THREE.MeshPhysicalMaterial({color:c,roughness:o.rough??0.7,metalness:0.0,clearcoat:o.cc??0.3,clearcoatRoughness:o.ccr??0.5,sheen:o.sheen??0.2,sheenColor:new THREE.Color(0xffd0d0),sheenRoughness:0.6,transparent:true});
+  const ell=(rx,ry,rz,c,pos,o={})=>{const m=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),tissue(c,o));m.scale.set(rx,ry,rz);m.position.set(pos[0],pos[1],pos[2]);return m;};
+  const tube=(pts,r,c,o={})=>{const curve=new THREE.CatmullRomCurve3(pts.map(V));return new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(30,pts.length*16),r,12,false),tissue(c,o));};
+
+  /* ---- Gefurchte Großhirnrinde, in 4 Lappen (beide Hemisphären) zerlegt ---- */
+  function buildCortex(){
+    const SEGW=168,SEGH=124;
+    const geo=new THREE.SphereGeometry(1,SEGW,SEGH);
+    const pos=geo.attributes.position;const N=pos.count;
+    const dir=new Float32Array(N*3);const col=new Float32Array(N*3);
+    const baseGrey=new THREE.Color(0xc6b6b4), dark=new THREE.Color(0x6a565a);
+    const tints={F:new THREE.Color(0xcf8f9a),P:new THREE.Color(0xcdb88f),T:new THREE.Color(0x8fb2cf),O:new THREE.Color(0x9fcf8f)};
+    const gyr=(x,y,z)=>{let f=Math.sin(x*9+Math.sin(y*7))*Math.cos(z*9);f+=0.6*Math.sin(x*15+z*12);f+=0.6*Math.cos(y*14+x*5);f+=0.4*Math.sin(z*18+y*6);return f;};
+    for(let i=0;i<N;i++){
+      const nx=pos.getX(i),ny=pos.getY(i),nz=pos.getZ(i);
+      dir[i*3]=nx;dir[i*3+1]=ny;dir[i*3+2]=nz;
+      let r=1.0;
+      const mid=Math.exp(-Math.pow(nx/0.05,2));      // Längsfurche zwischen Hemisphären
+      r-=0.16*mid;
+      const f=gyr(nx,ny,nz);
+      r+=0.055*f;                                     // Gyri/Sulci
+      let X=nx*r*1.15, Y=ny*r*0.92, Z=nz*r*1.35;
+      if(ny<-0.15)Y+=(ny+0.15)*-0.18;                 // Unterseite etwas abflachen
+      pos.setXYZ(i,X,Y,Z);
+      const sulc=Math.max(0,-f)*0.5+mid*0.6;
+      const lobe=nz>0.33?'F':(nz<-0.4?'O':(ny>0.15?'P':'T'));
+      const c=baseGrey.clone().lerp(dark,Math.min(0.7,sulc)).lerp(tints[lobe],0.26);
+      col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
+    }
+    geo.computeVertexNormals();
+    const nor=geo.attributes.normal,idx=geo.index;
+    const groups={};
+    const lobeOfFace=(a,b,c)=>{const cx=(dir[a*3]+dir[b*3]+dir[c*3])/3,cy=(dir[a*3+1]+dir[b*3+1]+dir[c*3+1])/3,cz=(dir[a*3+2]+dir[b*3+2]+dir[c*3+2])/3;return (cz>0.33?'F':(cz<-0.4?'O':(cy>0.15?'P':'T')));};
+    for(let fI=0;fI<idx.count;fI+=3){
+      const a=idx.getX(fI),b=idx.getX(fI+1),c=idx.getX(fI+2);
+      const key=lobeOfFace(a,b,c);
+      if(!groups[key])groups[key]={p:[],n:[],c:[]};
+      const G=groups[key];
+      for(const i of [a,b,c]){G.p.push(pos.getX(i),pos.getY(i),pos.getZ(i));G.n.push(nor.getX(i),nor.getY(i),nor.getZ(i));G.c.push(col[i*3],col[i*3+1],col[i*3+2]);}
+    }
+    const meshes={};
+    for(const key in groups){const G=groups[key];const bg=new THREE.BufferGeometry();
+      bg.setAttribute('position',new THREE.Float32BufferAttribute(G.p,3));
+      bg.setAttribute('normal',new THREE.Float32BufferAttribute(G.n,3));
+      bg.setAttribute('color',new THREE.Float32BufferAttribute(G.c,3));
+      meshes[key]=new THREE.Mesh(bg,new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.78,metalness:0.0,clearcoat:0.22,clearcoatRoughness:0.5,sheen:0.18,transparent:true}));}
+    return meshes;
+  }
+  const lobes=buildCortex();
+
+  const frontal=new THREE.Group();frontal.add(lobes['F']);
+  tagPart(frontal,"frontal","Frontallappen (Stirnlappen)",{f:"Planung, Entscheidungen, Bewegungssteuerung (motorischer Cortex), Persönlichkeit und das Sprechen (Broca-Areal). Der vorderste Teil steuert Impulskontrolle und Sozialverhalten.",k:"Schäden verändern Persönlichkeit und Impulskontrolle; eine Broca-Schädigung stört das Sprechen bei erhaltenem Verstehen.",m:"Frontal = Führung: Planen, Bewegen, Persönlichkeit."});
+  const parietal=new THREE.Group();parietal.add(lobes['P']);
+  tagPart(parietal,"parietal","Parietallappen (Scheitellappen)",{f:"Verarbeitet Berührung, Temperatur und Schmerz (somatosensorischer Cortex) und sorgt für räumliche Orientierung und Körperwahrnehmung.",k:"Schäden können Vernachlässigung einer Körperhälfte (Neglect) oder Orientierungsstörungen verursachen.",m:"Parietal = Position: Tasten und Raum."});
+  const temporal=new THREE.Group();temporal.add(lobes['T']);
+  tagPart(temporal,"temporal","Temporallappen (Schläfenlappen)",{f:"Hören, Sprachverständnis (Wernicke-Areal) und Gedächtnis. Er liegt eng am Hippocampus, der Erinnerungen bildet.",k:"Häufiger Ursprung von Epilepsie; Wernicke-Schäden stören das Sprachverständnis.",m:"Temporal = Ton & Text: Hören und Verstehen."});
+  const occipital=new THREE.Group();occipital.add(lobes['O']);
+  tagPart(occipital,"occipital","Okzipitallappen (Hinterhauptslappen)",{f:"Das Sehzentrum: verarbeitet alle visuellen Reize aus den Augen — Form, Farbe, Bewegung.",k:"Schäden führen zu Gesichtsfeldausfällen oder Rindenblindheit, obwohl die Augen gesund sind.",m:"Okzipital = Optik: ganz hinten sitzt das Sehen."});
+
+  /* ---- Kleinhirn (fein gefurcht) ---- */
+  function buildCerebellum(){
+    const geo=new THREE.SphereGeometry(1,80,60);const pos=geo.attributes.position;
+    for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
+      const fold=0.04*Math.sin(z*40)+0.02*Math.sin(x*30);     // feine Blätter (Folia)
+      const r=1+fold; pos.setXYZ(i,x*r,y*r,z*r);}
+    geo.computeVertexNormals();
+    const m=new THREE.Mesh(geo,tissue(0xb89a86,{rough:0.8}));m.scale.set(0.95,0.5,0.72);m.position.set(0,-1.05,-1.25);return m;
+  }
+  const cerebellum=buildCerebellum();
+  tagPart(cerebellum,"cerebellum","Kleinhirn (Cerebellum)",{f:"Koordiniert Bewegungen, Gleichgewicht und Feinmotorik und sorgt für flüssige, präzise Abläufe. Speichert auch motorisches Lernen.",k:"Schäden führen zu Ataxie: wackeligem Gang, unsicheren Bewegungen, Zittern bei Zielbewegungen.",m:"Kleinhirn = Koordination: macht Bewegungen rund."});
+
+  /* ---- Hirnstamm ---- */
+  const brainstem=new THREE.Group();
+  brainstem.add(ell(0.26,0.24,0.26,0xc6ab8e,[0,-0.55,-0.25],{rough:0.75}));  // Mittelhirn
+  brainstem.add(ell(0.32,0.34,0.34,0xceb495,[0,-1.0,-0.2],{rough:0.75}));    // Brücke (Pons)
+  brainstem.add(tube([[0,-1.2,-0.2],[0,-1.7,-0.15],[0,-2.25,-0.1]],0.18,0xc6ab8e,{rough:0.75})); // Medulla
+  tagPart(brainstem,"brainstem","Hirnstamm",{f:"Steuert die lebenswichtigen Grundfunktionen: Atmung, Herzschlag, Blutdruck, Schlucken, Wachheit. Verbindet Gehirn und Rückenmark.",k:"Schon kleine Schäden sind lebensbedrohlich, weil hier Atmung und Kreislauf geregelt werden.",m:"Hirnstamm = Lebensschalter: Atmen und Herzschlag."});
+
+  /* ---- Tiefe Strukturen (innen, beim Auseinanderziehen sichtbar) ---- */
+  const thalamus=new THREE.Group();
+  thalamus.add(ell(0.26,0.22,0.34,0xb0828a,[0.22,0.2,-0.1]));thalamus.add(ell(0.26,0.22,0.34,0xb0828a,[-0.22,0.2,-0.1]));
+  tagPart(thalamus,"thalamus","Thalamus",{f:"Die zentrale Umschaltstation: fast alle Sinnesinformationen (außer Riechen) werden hier gefiltert und an die Großhirnrinde weitergeleitet.",k:"Beteiligt an Bewusstsein und Schmerzverarbeitung; Schäden stören Wahrnehmung und Aufmerksamkeit.",m:"Thalamus = Tor zum Bewusstsein."});
+
+  const limbic=new THREE.Group();
+  limbic.add(tube([[0.5,-0.3,0.45],[0.8,-0.5,0.0],[0.6,-0.45,-0.5]],0.09,0x9c8aa8)); // Hippocampus re
+  limbic.add(tube([[-0.5,-0.3,0.45],[-0.8,-0.5,0.0],[-0.6,-0.45,-0.5]],0.09,0x9c8aa8)); // Hippocampus li
+  limbic.add(ell(0.14,0.12,0.16,0xb07f6a,[0.6,-0.4,0.55]));  // Amygdala re
+  limbic.add(ell(0.14,0.12,0.16,0xb07f6a,[-0.6,-0.4,0.55])); // Amygdala li
+  tagPart(limbic,"limbic","Limbisches System (Hippocampus & Amygdala)",{f:"Der Hippocampus bildet neue Erinnerungen und ist wichtig für räumliche Orientierung. Die Amygdala steuert Emotionen, vor allem Angst.",k:"Hippocampus-Schäden verhindern, dass neue Erinnerungen gebildet werden (Amnesie); er ist früh bei Alzheimer betroffen.",m:"Hippocampus = Gedächtnis, Amygdala = Angst."});
+
+  const deep=new THREE.Group();
+  deep.add(tube([[0,0.25,0.85],[0,0.75,0.4],[0,0.88,-0.1],[0,0.72,-0.55],[0,0.35,-0.8]],0.1,0xe0d6c6,{rough:0.6})); // Balken
+  deep.add(ell(0.2,0.3,0.22,0x9a8f6a,[0.42,0.12,0.15]));deep.add(ell(0.2,0.3,0.22,0x9a8f6a,[-0.42,0.12,0.15])); // Basalganglien
+  deep.add(ell(0.12,0.1,0.12,0xc89a7a,[0,-0.05,0.18]));   // Hypothalamus
+  deep.add(ell(0.06,0.08,0.06,0xd9b48a,[0,-0.32,0.32]));  // Hypophyse
+  tagPart(deep,"deep","Balken, Basalganglien & Hypothalamus",{f:"Der Balken (Corpus callosum) verbindet die beiden Hälften. Die Basalganglien steuern Bewegungsabläufe. Der Hypothalamus regelt Hunger, Durst, Temperatur und Hormone (über die Hypophyse).",k:"Basalganglien-Störung: Parkinson (Zittern, Steifheit). Hypothalamus steuert lebenswichtige Regelkreise.",m:"Balken verbindet, Basalganglien bewegen, Hypothalamus regelt."});
+
+  g.add(frontal,parietal,temporal,occipital,cerebellum,brainstem,thalamus,limbic,deep);
+
+  /* ---- Pathologie: Hirntumor (Gliom), versteckt ---- */
+  function buildTumor(){
+    const geo=new THREE.SphereGeometry(0.34,32,24);const pos=geo.attributes.position;
+    for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);const n=new THREE.Vector3(x,y,z).normalize();const lump=0.09*Math.sin(n.x*9)*Math.cos(n.y*8)+0.05*Math.sin(n.z*12);pos.setXYZ(i,x+n.x*lump,y+n.y*lump,z+n.z*lump);}
+    geo.computeVertexNormals();
+    return new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0x6b4b6b,roughness:0.6,transparent:true}));
+  }
+  const tumor=buildTumor();tumor.position.set(0.62,0.2,0.55);tumor.visible=false;
+  tagPart(tumor,"tumor","Hirntumor (Gliom)",{f:"Eine wuchernde Masse aus entarteten Zellen — beim Gliom aus den Gliazellen, die normalerweise die Neuronen stützen.",k:"Tumoren entstehen, wenn sich Zellen durch Genfehler unkontrolliert teilen. Die Masse verdrängt gesundes Gewebe, erhöht den Hirndruck und stört die Funktion der betroffenen Region.",m:"Tumor = Zellteilung ohne Bremse."});
+  const edema=new THREE.Mesh(new THREE.SphereGeometry(0.6,24,18),new THREE.MeshStandardMaterial({color:0x8a7a4a,roughness:0.9,transparent:true,opacity:0.22}));
+  edema.position.copy(tumor.position);edema.visible=false;
+  g.add(tumor,edema);
+
+  /* ---- Teardown & Systeme ---- */
+  const EX={frontal:[0,0.5,2.5],parietal:[0,2.5,-0.3],occipital:[0,0.5,-2.5],temporal:[0,-2.0,0.7],
+    cerebellum:[0,-1.6,-2.4],brainstem:[0,-2.8,-0.5],thalamus:[0,1.6,0.0],limbic:[0,-1.2,2.0],deep:[1.2,1.4,0.6]};
+  const SYS={frontal:'rinde',parietal:'rinde',temporal:'rinde',occipital:'rinde',cerebellum:'kleinhirn',
+    brainstem:'hirnstamm',thalamus:'tief',deep:'tief',limbic:'limbisch'};
+  g.children.forEach(c=>{if(c.userData.part){const id=c.userData.part.partId;if(EX[id])c.userData.explodeVec=new THREE.Vector3(...EX[id]);if(SYS[id])c.userData.system=SYS[id];}});
+
+  return {group:g,zoom:9.5,spin:0.003,patho:[tumor,edema]};
+}
+
+const INTRO="Das Gehirn steuert alles: Denken, Fühlen, Bewegung, Sinne und die lebenswichtigen Grundfunktionen. Die gefurchte Oberfläche ist die Großhirnrinde, aufgeteilt in vier Lappen. Klick auf jede Region, um zu sehen, wofür sie zuständig ist. Zieh das Gehirn auseinander, um die tiefen Areale wie Thalamus, Hippocampus und Hirnstamm freizulegen.";
+
+/* =====================================================================
+   3) VIEWER
+   ===================================================================== */
+const sceneEl=document.getElementById("scene");
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+renderer.localClippingEnabled=true;
+sceneEl.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,100);
+(async()=>{try{const mod=await import("three/addons/environments/RoomEnvironment.js");const pmrem=new THREE.PMREMGenerator(renderer);scene.environment=pmrem.fromScene(new mod.RoomEnvironment(),0.04).texture;}catch(e){console.warn("env fallback",e);}})();
+scene.add(new THREE.AmbientLight(0xb0c4d0,0.4));
+const key=new THREE.DirectionalLight(0xffffff,1.6);key.position.set(4,6,7);scene.add(key);
+const fill=new THREE.DirectionalLight(0xbfe9ff,0.5);fill.position.set(-5,2,-4);scene.add(fill);
+const rim=new THREE.PointLight(0xc8a0ff,1.1,40);rim.position.set(-6,-3,5);scene.add(rim);
+const rim2=new THREE.PointLight(0x9ad6ff,0.8,40);rim2.position.set(6,-2,4);scene.add(rim2);
+
+const group=new THREE.Group();scene.add(group);
+const clipPlane=new THREE.Plane(new THREE.Vector3(0,-1,0),5);
+let sectionOn=false,sectionVal=0;
+
+let targetRotX=0,targetRotY=0,velX=0,velY=0;
+const ZOOM_MIN=4,ZOOM_MAX=18;
+let autoRotate=true,interacting=false;
+let targetOpen=0,curOpen=0;
+let wake=70;
+
+const built=buildBrain();
+const spin=built.spin, defaultZoom=built.zoom;
+let targetZoom=defaultZoom;camera.position.set(0,0,defaultZoom);
+group.add(built.group);
+group.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.side=THREE.DoubleSide;m.clippingPlanes=[clipPlane];});}});
+
+const topParts=built.group.children.filter(c=>c.userData&&c.userData.part&&c.userData.system).map(c=>({obj:c,base:c.position.clone(),ex:c.userData.explodeVec||new THREE.Vector3(0,1,0),system:c.userData.system,visTarget:1,visCur:1,meshes:[]}));
+topParts.forEach(p=>{p.obj.traverse(o=>{if(o.isMesh)p.meshes.push(o);});});
+
+/* ---- Schichten ---- */
+const LAYERS=[['rinde','Großhirnrinde (Lappen)','#cf8f9a'],['kleinhirn','Kleinhirn','#b89a86'],['hirnstamm','Hirnstamm','#ceb495'],['limbisch','Limbisches System','#9c8aa8'],['tief','Tiefe Kerne & Balken','#9a8f6a']];
+const layerState={};LAYERS.forEach(l=>layerState[l[0]]=true);
+const layerList=document.getElementById("layerlist");
+LAYERS.forEach(l=>{const row=document.createElement("div");row.className="lay on";
+  row.innerHTML='<span class="swatch" style="background:'+l[2]+'"></span><span class="name">'+l[1]+'</span><span class="sw"></span>';
+  row.addEventListener("click",()=>{layerState[l[0]]=!layerState[l[0]];row.classList.toggle("on",layerState[l[0]]);applyLayers();});
+  layerList.appendChild(row);});
+function applyLayers(){topParts.forEach(p=>{p.visTarget=layerState[p.system]?1:0;});}
+applyLayers();
+
+/* ---- Tumor ---- */
+let tumorOn=false;
+const clinBtn=document.getElementById("clinbtn"),banner=document.getElementById("banner");
+function setTumor(on){tumorOn=on;built.patho.forEach(m=>m.visible=on);clinBtn.classList.toggle("warnactive",on);clinBtn.textContent=on?"\u26A0 Tumor aus":"\u26A0 Tumor zeigen";
+  if(on){banner.textContent="Hirntumor (Gliom): unkontrolliert wachsende Zellen verdrängen gesundes Gewebe";banner.classList.add("show");}else banner.classList.remove("show");}
+clinBtn.addEventListener("click",()=>setTumor(!tumorOn));
+
+/* ---- Maus ---- */
+let dragging=false,lastMX=0,lastMY=0,moved=0;
+renderer.domElement.addEventListener("pointerdown",e=>{dragging=true;moved=0;lastMX=e.clientX;lastMY=e.clientY;velX=velY=0;});
+window.addEventListener("pointerup",e=>{if(dragging&&moved<6)tryPick(e.clientX,e.clientY);dragging=false;});
+window.addEventListener("pointermove",e=>{if(!dragging)return;moved+=Math.abs(e.clientX-lastMX)+Math.abs(e.clientY-lastMY);interacting=true;const dy=(e.clientX-lastMX)*0.006,dx=(e.clientY-lastMY)*0.006;targetRotY+=dy;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX+dx));velY=dy;velX=dx;lastMX=e.clientX;lastMY=e.clientY;});
+renderer.domElement.addEventListener("wheel",e=>{e.preventDefault();interacting=true;targetZoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,targetZoom+e.deltaY*0.005));},{passive:false});
+
+/* ---- Buttons & Panels ---- */
+const $=id=>document.getElementById(id);
+function toggleSide(el){el.classList.toggle("show");}
+$("layerbtn").addEventListener("click",()=>toggleSide($("layers")));
+$("layerclose").addEventListener("click",()=>$("layers").classList.remove("show"));
+$("databtn").addEventListener("click",()=>toggleSide($("values")));
+$("iclose").addEventListener("click",()=>$("values").classList.remove("show"));
+$("pclose").addEventListener("click",()=>$("panel").classList.remove("show"));
+const rotBtn=$("rotbtn");rotBtn.addEventListener("click",()=>{autoRotate=!autoRotate;rotBtn.classList.toggle("active",autoRotate);});
+const openBtn=$("openbtn");openBtn.addEventListener("click",()=>{targetOpen=targetOpen>0.05?0:1;openBtn.classList.toggle("active",targetOpen>0.05);});
+const sectionBtn=$("sectionbtn"),sectionUI=$("section"),sectionSlider=$("sectionslider");
+sectionBtn.addEventListener("click",()=>{sectionOn=!sectionOn;sectionBtn.classList.toggle("active",sectionOn);sectionUI.classList.toggle("show",sectionOn);});
+sectionSlider.addEventListener("input",()=>{sectionVal=parseFloat(sectionSlider.value)/100;});
+$("resetbtn").addEventListener("click",()=>{targetRotX=0;targetRotY=0;velX=velY=0;targetZoom=defaultZoom;targetOpen=0;openBtn.classList.remove("active");sectionOn=false;sectionBtn.classList.remove("active");sectionUI.classList.remove("show");sectionSlider.value=0;sectionVal=0;setTumor(false);});
+
+/* ---- EEG-Zustand ---- */
+const wakeEl=$("wake");
+function updateWake(){let label;if(wake<25)label="Tiefschlaf (Delta)";else if(wake<55)label="Schlaf (Theta)";else if(wake<80)label="entspannt (Alpha)";else label="wach (Beta)";$("wakeval").textContent=label;}
+wakeEl.addEventListener("input",()=>{wake=parseInt(wakeEl.value);updateWake();});
+$("sleepbtn").addEventListener("click",()=>{wake=15;wakeEl.value=15;updateWake();});
+$("awakebtn").addEventListener("click",()=>{wake=90;wakeEl.value=90;updateWake();});
+updateWake();
+
+/* ---- Klick-Info ---- */
+const raycaster=new THREE.Raycaster();const mouse=new THREE.Vector2();
+const panel=$("panel"),pTitle=$("ptitle"),pInfo=$("pinfo"),pNote=$("pnote"),pSaved=$("saved"),pHead=$("phead"),noteWrap=$("note-wrap");
+let currentPartId=null;
+function infoHTML(info){if(typeof info==='string')return info;let h='';if(info.f)h+='<b>Funktion:</b> '+info.f+'<br><br>';if(info.k)h+='<b>Klinik:</b> '+info.k;if(info.m)h+='<br><br><b>Merksatz:</b> '+info.m;return h;}
+function tryPick(x,y){mouse.x=(x/window.innerWidth)*2-1;mouse.y=-(y/window.innerHeight)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(group.children,true);for(const h of hits){let o=h.object;while(o&&!(o.userData&&o.userData.part))o=o.parent;if(o&&o.userData.part&&o.visible){openPanel(o.userData.part);return;}}}
+function noteKey(id){return "anote:brain:"+id;}
+function openPanel(part){currentPartId=part.partId;pTitle.textContent=part.label;pInfo.innerHTML=infoHTML(part.info);
+  if(part.overview){pHead.classList.add("ov");noteWrap.style.display="none";}
+  else{pHead.classList.remove("ov");noteWrap.style.display="block";let s="";try{s=localStorage.getItem(noteKey(part.partId))||"";}catch(e){}pNote.value=s;pSaved.textContent="";}
+  panel.classList.add("show");}
+pNote.addEventListener("input",()=>{if(!currentPartId)return;try{localStorage.setItem(noteKey(currentPartId),pNote.value);pSaved.textContent="gespeichert";}catch(e){pSaved.textContent="speichern nicht möglich";}});
+$("infobtn").addEventListener("click",()=>openPanel({partId:null,label:"Menschliches Gehirn",info:INTRO,overview:true}));
+setTimeout(()=>openPanel({partId:null,label:"Menschliches Gehirn",info:INTRO,overview:true}),400);
+
+/* ---- Render-Schleife ---- */
+const _v=new THREE.Vector3();
+function animate(){
+  requestAnimationFrame(animate);
+  if(!interacting){
+    if(Math.abs(velY)>0.0008||Math.abs(velX)>0.0008){targetRotY+=velY;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX+velX));velY*=0.94;velX*=0.94;}
+    else if(autoRotate)targetRotY+=spin;
+  }
+  group.rotation.x+=(targetRotX-group.rotation.x)*0.12;
+  group.rotation.y+=(targetRotY-group.rotation.y)*0.12;
+  camera.position.z+=(targetZoom-camera.position.z)*0.12;
+  curOpen+=(targetOpen-curOpen)*0.12;
+  topParts.forEach(p=>{p.obj.position.copy(p.base).add(_v.copy(p.ex).multiplyScalar(curOpen));p.visCur+=(p.visTarget-p.visCur)*0.18;const vis=p.visCur>0.02;p.obj.visible=vis;p.meshes.forEach(m=>{if(m.material)m.material.opacity=p.visCur;});});
+  clipPlane.constant=sectionOn?(-sectionVal*2.4):5;
+  interacting=false;
+  renderer.render(scene,camera);
+}
+animate();
+window.addEventListener("resize",()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+
+/* ---- EEG ---- */
+(function eeg(){
+  const c=$("eeg");const x=c.getContext("2d");
+  function fit(){c.width=c.clientWidth||240;c.height=c.clientHeight||64;}fit();window.addEventListener("resize",fit);
+  const data=[];let phase=0;
+  function draw(){requestAnimationFrame(draw);const w=c.width,h=c.height;
+    const freq=1+wake/14, amp=1.1-wake/140;            // wach: schnell+klein, Schlaf: langsam+groß
+    phase+=0.02;
+    const val=Math.sin(phase*freq)*amp*0.5 + 0.25*Math.sin(phase*freq*2.3)*amp + (Math.random()-0.5)*0.08;
+    data.push(val);while(data.length>w)data.shift();
+    x.clearRect(0,0,w,h);x.strokeStyle="rgba(45,212,191,.07)";x.lineWidth=1;for(let gx=0;gx<w;gx+=14){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,h);x.stroke();}
+    x.strokeStyle="#2dd4bf";x.lineWidth=2;x.beginPath();const mid=h*0.5,a=h*0.4;for(let i=0;i<data.length;i++){const yy=mid-data[i]*a;if(i===0)x.moveTo(0,yy);else x.lineTo(i,yy);}x.stroke();}
+  draw();
+})();
+
+/* =====================================================================
+   4) HAND-TRACKING
+   ===================================================================== */
+const video=$("video"),overlay=$("overlay"),octx=overlay.getContext("2d");
+const camState=$("camstate"),handState=$("handstate"),dot=$("dot"),errEl=$("err");
+let handLandmarker=null,lastVideoTime=-1,pinching=false,lastPX=0,lastPY=0,twoStartDist=null,twoStartZoom=null,openStartDist=null,openStartVal=null;
+const fPX=new OneEuro(1.0,0.012),fPY=new OneEuro(1.0,0.012),fDist=new OneEuro(1.0,0.01),fOpen=new OneEuro(1.0,0.01);
+const CONN=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+const d2=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+async function startCamera(){
+  errEl.textContent="";
+  try{
+    const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm");
+    handLandmarker=await HandLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numHands:2,minHandDetectionConfidence:0.6,minTrackingConfidence:0.6});
+    const stream=await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720,facingMode:"user"}});
+    video.srcObject=stream;await video.play();
+    overlay.width=video.videoWidth||1280;overlay.height=video.videoHeight||720;
+    $("cam").classList.remove("hidden");camState.textContent="an";dot.classList.add("live");detectLoop();
+  }catch(e){console.error(e);errEl.textContent="Kamera/Modell-Fehler: "+(e.message||e);}
+}
+function detectLoop(){if(handLandmarker&&video.readyState>=2&&video.currentTime!==lastVideoTime){lastVideoTime=video.currentTime;handleHands(handLandmarker.detectForVideo(video,performance.now()));}requestAnimationFrame(detectLoop);}
+function handleHands(res){
+  const hands=res.landmarks||[];handState.textContent=hands.length;
+  octx.clearRect(0,0,overlay.width,overlay.height);octx.strokeStyle="rgba(45,212,191,.7)";octx.fillStyle="#aef7ec";octx.lineWidth=2;
+  for(const lm of hands){for(const [a,b] of CONN){octx.beginPath();octx.moveTo(lm[a].x*overlay.width,lm[a].y*overlay.height);octx.lineTo(lm[b].x*overlay.width,lm[b].y*overlay.height);octx.stroke();}for(const p of lm){octx.beginPath();octx.arc(p.x*overlay.width,p.y*overlay.height,3,0,6.28);octx.fill();}}
+  const now=performance.now();
+  if(hands.length>=2){
+    pinching=false;
+    const sizeA=Math.max(d2(hands[0][0],hands[0][9]),1e-4),sizeB=Math.max(d2(hands[1][0],hands[1][9]),1e-4);
+    const pinA=d2(hands[0][4],hands[0][8])/sizeA,pinB=d2(hands[1][4],hands[1][8])/sizeB;
+    const wristDist=d2(hands[0][0],hands[1][0]);
+    if(pinA<0.45&&pinB<0.45){
+      twoStartDist=null;const d=fOpen.filter(wristDist,now);
+      if(openStartDist===null){openStartDist=d;openStartVal=targetOpen;}
+      interacting=true;targetOpen=Math.max(0,Math.min(1,openStartVal+(d-openStartDist)*2.2));
+      openBtn.classList.toggle("active",targetOpen>0.05);
+    } else {
+      openStartDist=null;const d=fDist.filter(wristDist,now);
+      if(twoStartDist===null){twoStartDist=d;twoStartZoom=targetZoom;}
+      interacting=true;targetZoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,twoStartZoom*(twoStartDist/Math.max(d,1e-4))));
+    }
+    return;
+  }
+  twoStartDist=null;openStartDist=null;
+  if(hands.length===1){
+    const lm=hands[0];const handSize=Math.max(d2(lm[0],lm[9]),1e-4);const ratio=d2(lm[4],lm[8])/handSize;
+    const px=fPX.filter(1-(lm[4].x+lm[8].x)/2,now),py=fPY.filter((lm[4].y+lm[8].y)/2,now);
+    if(!pinching&&ratio<0.40){pinching=true;lastPX=px;lastPY=py;}
+    else if(pinching&&ratio>0.55){pinching=false;}
+    if(pinching){interacting=true;const dy=(px-lastPX)*5.0,dx=(py-lastPY)*5.0;targetRotY+=dy;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX+dx));velY=dy;velX=dx;lastPX=px;lastPY=py;}
+    return;
+  }
+  pinching=false;
+}
+
+const gate=$("gate"),startBtn=$("start");
+$("skip").addEventListener("click",()=>gate.classList.add("gone"));
+startBtn.addEventListener("click",async()=>{startBtn.disabled=true;startBtn.textContent="lädt…";await startCamera();if(!errEl.textContent)gate.classList.add("gone");startBtn.disabled=false;startBtn.textContent="Kamera starten";});
 </script>
 </body>
 </html>
