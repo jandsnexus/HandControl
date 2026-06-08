@@ -12,7 +12,7 @@
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace}
   #scene{position:fixed;inset:0;z-index:1}
-  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,rgba(45,212,191,.10),transparent 55%),radial-gradient(circle at 80% 90%,rgba(255,80,90,.06),transparent 55%)}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,rgba(45,212,191,.08),transparent 55%),radial-gradient(circle at 80% 90%,rgba(255,80,90,.06),transparent 55%)}
   .hud{position:fixed;z-index:10;pointer-events:none}
   #top{top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 22px}
   .brand{display:flex;align-items:center;gap:12px}
@@ -25,7 +25,7 @@
   .brand span{font-size:11px;color:var(--text-dim);letter-spacing:1px}
   #status{font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:right;line-height:1.6}
   #status b{color:var(--accent);font-weight:500}
-  #legend{bottom:20px;left:22px;font-size:11px;color:var(--text-dim);line-height:1.9;letter-spacing:.5px;max-width:230px}
+  #legend{bottom:20px;left:22px;font-size:11px;color:var(--text-dim);line-height:1.9;letter-spacing:.5px;max-width:240px}
   #legend .k{color:var(--text)} #legend .sep{color:var(--accent-dim)}
   #cam{bottom:20px;right:22px;width:200px;height:150px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2)}
   #cam.hidden{display:none}
@@ -36,9 +36,6 @@
   .btn{pointer-events:auto;font-family:inherit;font-size:11px;letter-spacing:1px;color:var(--text);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;white-space:nowrap}
   .btn:hover{border-color:var(--accent);color:var(--accent)}
   .btn.active{border-color:var(--accent);color:var(--accent)}
-  #instruments{bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;padding:8px;background:rgba(13,20,27,.7);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(6px)}
-  #instruments .btn{background:transparent}
-  #instruments .btn.tool.active{background:var(--accent);color:var(--bg);border-color:var(--accent)}
   #panel{position:fixed;z-index:12;top:50%;right:22px;transform:translateY(-50%);width:300px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px;opacity:0;pointer-events:none;transition:opacity .25s}
   #panel.show{opacity:1;pointer-events:auto}
   #panel .ph{display:flex;align-items:center;gap:8px;margin-bottom:10px}
@@ -72,10 +69,13 @@
   #skip{pointer-events:auto;background:none;border:none;cursor:pointer;color:var(--text-dim);font-family:inherit;font-size:11px;letter-spacing:1px;text-decoration:underline;text-underline-offset:4px}
   #skip:hover{color:var(--text)}
   #err{color:var(--warn);font-size:12px;min-height:16px;max-width:460px}
-  @media(max-width:640px){#cam{width:130px;height:98px}#panel{width:calc(100% - 44px);top:auto;bottom:200px;transform:none}#tools{top:58px;right:12px}#info{left:12px;right:12px;width:auto;top:auto;bottom:200px;transform:none}#legend{display:none}#instruments{bottom:12px}}
+  @media(max-width:640px){#cam{width:130px;height:98px}#panel{width:calc(100% - 44px);top:auto;bottom:170px;transform:none}#tools{top:58px;right:12px}#info{left:12px;right:12px;width:auto;top:auto;bottom:170px;transform:none}#legend{display:none}}
 </style>
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
 </script>
 </head>
 <body>
@@ -84,32 +84,23 @@
     <div class="brand">
       <a class="back" href="index.html" title="Übersicht">&#8592;</a>
       <div class="dot" id="dot"></div>
-      <div><h1>Menschliches Herz</h1><span>Teardown · Instrumente · Handtracking</span></div>
+      <div><h1>Menschliches Herz</h1><span>Realistisches Modell · Teardown · Handtracking</span></div>
     </div>
     <div id="status">Kamera: <b id="camstate">aus</b><br>Hände: <b id="handstate">0</b></div>
   </div>
   <div id="tools" class="hud">
     <button class="btn" id="infobtn">&#9432; Überblick</button>
-    <button class="btn" id="openbtn">&#9697; Aufschneiden</button>
-    <button class="btn" id="modebtn">Modus: Schnitt</button>
+    <button class="btn" id="openbtn">&#9697; Auseinanderziehen</button>
     <button class="btn active" id="rotbtn">&#8635; Auto-Drehung</button>
     <button class="btn active" id="beatbtn">&#9829; Herzschlag</button>
     <button class="btn" id="databtn">&#9636; EKG &amp; Fakten</button>
     <button class="btn" id="resetbtn">&#8634; Zurücksetzen</button>
   </div>
-  <div id="instruments" class="hud">
-    <button class="btn tool active" id="t-none" data-tool="none">&#9995; Ansehen</button>
-    <button class="btn tool" id="t-scalpel" data-tool="scalpel">&#128298; Skalpell</button>
-    <button class="btn tool" id="t-clamp" data-tool="clamp">&#9886; Klemme</button>
-    <button class="btn tool" id="t-probe" data-tool="probe">&#9678; Sonde</button>
-  </div>
   <div id="legend" class="hud">
-    <div id="legendInner">
-      <div><span class="k">Pinch</span> <span class="sep">&#8594;</span> drehen</div>
-      <div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div>
-      <div><span class="k">2 Hände + Pinch</span> <span class="sep">&#8594;</span> auseinanderziehen</div>
-      <div><span class="k">Klick</span> <span class="sep">&#8594;</span> Struktur-Info</div>
-    </div>
+    <div><span class="k">Pinch</span> <span class="sep">&#8594;</span> drehen</div>
+    <div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div>
+    <div><span class="k">2 Hände + Pinch auseinander</span> <span class="sep">&#8594;</span> Teardown</div>
+    <div><span class="k">Klick auf ein Teil</span> <span class="sep">&#8594;</span> Info</div>
   </div>
   <div id="cam" class="hud hidden">
     <span id="camlabel">LIVE</span>
@@ -140,7 +131,7 @@
   </div>
   <div id="gate">
     <h2>Menschliches Herz</h2>
-    <p>Kamera öffnen und mit der Hand steuern. Unten wählst du ein Instrument: Mit dem Skalpell über das Herz fahren und „zudrücken" (Pinch) schneidet es auf und legt die Klappen frei. Ohne Instrument: Pinch dreht, zwei Hände zoomen, zwei Hände auseinander = Teardown. Maus & Trackpad gehen immer auch.</p>
+    <p>Kamera öffnen und mit der Hand steuern: Pinch dreht, zwei Hände zoomen. Ziehst du zwei gegriffene Hände auseinander, zerlegt sich das Herz in seine Einzelteile (Teardown) — jedes Teil kannst du anklicken. Maus & Trackpad gehen immer auch.</p>
     <button id="start">Kamera starten</button>
     <button id="skip">Ohne Kamera ansehen (nur Maus)</button>
     <div id="err"></div>
@@ -161,292 +152,207 @@ class OneEuro {
   filter(x,t){if(this.tPrev===null){this.tPrev=t;this.xPrev=x;return x;}let dt=(t-this.tPrev)/1000;if(dt<=0)dt=1/60;const dx=(x-this.xPrev)/dt;const edx=this.dxF.filter(dx,this.alpha(this.dCutoff,dt));const cutoff=this.minCutoff+this.beta*Math.abs(edx);const fx=this.xF.filter(x,this.alpha(cutoff,dt));this.xPrev=x;this.tPrev=t;return fx;}
 }
 
-/* =====================================================================
-   2) Hilfen
-   ===================================================================== */
 function tagPart(obj,id,label,info){obj.traverse(o=>{o.userData.part={partId:id,label,info};});obj.userData.part={partId:id,label,info};return obj;}
 
 /* =====================================================================
-   3) DAS HERZ — geformtes Myokard, innere Strukturen, Teardown-Daten
+   2) DAS HERZ — realistisches, „nasses" Gewebe, Fettgewebe, Teardown
    ===================================================================== */
 function buildHeart(){
   const g=new THREE.Group();
-  const C={atrium:0xa83f46,aorta:0xd23b3b,artery:0xe8403c,pulm:0x4f63c4,vein:0x4a6fb0,
-           pulmVein:0xc24a48,coroVein:0x7d5fae,valve:0xe9e2cf,myo:0x9a2b36,myoDark:0x5e141d,cav:0x3c0d14};
-  const mk=(c,rough=0.62)=>new THREE.MeshStandardMaterial({color:c,roughness:rough,metalness:0.04});
+  const C={atrium:0x8e3a40,aorta:0xc23a36,artery:0xb5302f,pulm:0x3f4f9e,vein:0x3f5d86,
+           pulmVein:0xaa3f44,coroVein:0x6f5aa0,valve:0xe7dcc6};
+  // „nasses" Gewebe: MeshPhysicalMaterial mit Clearcoat + Sheen reagiert auf die Umgebung
+  const tissue=(c,{rough=0.5,cc=0.55,ccr=0.32,sheen=0.35}={})=>new THREE.MeshPhysicalMaterial({color:c,roughness:rough,metalness:0.0,clearcoat:cc,clearcoatRoughness:ccr,sheen:sheen,sheenColor:new THREE.Color(0xffb0b4),sheenRoughness:0.55});
   const V=a=>new THREE.Vector3(a[0],a[1],a[2]);
-  const tube=(pts,r,c,rough=0.5)=>{const curve=new THREE.CatmullRomCurve3(pts.map(V));return new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(24,pts.length*16),r,12,false),mk(c,rough));};
+  const tube=(pts,r,c,o={})=>{const curve=new THREE.CatmullRomCurve3(pts.map(V));return new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(28,pts.length*18),r,14,false),tissue(c,o));};
 
-  /* ---- geformtes Myokard ---- */
+  /* ---- geformtes, maronenrotes Myokard mit Fettgewebe an den Furchen ---- */
   function sculptMyocardium(){
-    const geo=new THREE.SphereGeometry(1,170,130);
+    const geo=new THREE.SphereGeometry(1,200,150);
     const pos=geo.attributes.position;const n=new THREE.Vector3();const colors=[];
-    const base=new THREE.Color(C.myo), dark=new THREE.Color(C.myoDark);
+    const base=new THREE.Color(0x7a262c), dark=new THREE.Color(0x47141a), fat=new THREE.Color(0xcda863);
     for(let i=0;i<pos.count;i++){
       n.set(pos.getX(i),pos.getY(i),pos.getZ(i)).normalize();
       const nx=n.x,ny=n.y,nz=n.z;const lower=Math.max(0,-ny),upper=Math.max(0,ny);
-      let r=1.0; r*=1+0.17*upper; r*=1+0.11*nx;
-      const gA=Math.exp(-Math.pow((nx+0.05)/0.15,2))*Math.max(0,nz);
-      const gP=Math.exp(-Math.pow((nx+0.02)/0.17,2))*Math.max(0,-nz);
-      const av=Math.exp(-Math.pow((ny-0.5)/0.13,2));
-      r-=0.18*gA; r-=0.12*gP; r-=0.10*av*(1-Math.abs(nx)*0.4);
-      const grooveShade=Math.min(0.85,Math.max(gA*1.25,gP*1.0,av*0.85));
-      r+=0.020*Math.sin(nx*17)*Math.cos(ny*15)*Math.sin(nz*17)+0.011*Math.sin(nx*31+ny*9);
-      const horiz=1-0.62*Math.pow(lower,1.25);
-      let x=n.x*r*horiz, z=n.z*r*horiz*0.92, y=n.y*r*(1+0.34*lower);
-      x+=-0.10*lower; z+=0.12*lower;
+      let r=1.0;
+      r*=1+0.19*upper;                              // breitere Basis
+      r*=1+0.11*nx;                                 // linke Kammer bulliger
+      const gA=Math.exp(-Math.pow((nx+0.05)/0.14,2))*Math.max(0,nz);   // vordere Furche
+      const gP=Math.exp(-Math.pow((nx+0.02)/0.16,2))*Math.max(0,-nz);  // hintere Furche
+      const av=Math.exp(-Math.pow((ny-0.5)/0.12,2));                   // Kranzfurche
+      r-=0.19*gA; r-=0.13*gP; r-=0.11*av*(1-Math.abs(nx)*0.4);
+      const grooveShade=Math.min(0.85,Math.max(gA*1.3,gP*1.05,av*0.9));
+      r+=0.018*Math.sin(nx*17)*Math.cos(ny*15)*Math.sin(nz*17)+0.010*Math.sin(nx*33+ny*11)
+         +0.006*Math.sin(nx*60+nz*52);             // grobe + feine Oberfläche
+      const horiz=1-0.66*Math.pow(lower,1.3);       // schärfere Spitze
+      let x=n.x*r*horiz, z=n.z*r*horiz*0.9, y=n.y*r*(1+0.4*lower);
+      x+=-0.11*lower; z+=0.14*lower;
       pos.setXYZ(i,x,y,z);
-      const col=base.clone().lerp(dark,grooveShade);colors.push(col.r,col.g,col.b);
+      // Farbe: maronenrot, dunkle Furchen, gelbliches Fett entlang Kranz-/Vorderfurche + Basis
+      const fatF=Math.min(1, av*1.25 + gA*0.5 + Math.max(0,(ny-0.4))*0.5 );
+      const col=base.clone().lerp(dark,grooveShade).lerp(fat,Math.min(0.55,fatF*0.55));
+      const micro=0.92+0.08*Math.sin(nx*44+ny*31)*Math.cos(nz*38);
+      col.multiplyScalar(micro);
+      colors.push(col.r,col.g,col.b);
     }
     geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
-    const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.66,metalness:0.04}));
-    m.scale.set(1.05,1.32,1.0);m.position.y=-0.15;return m;
+    const m=new THREE.Mesh(geo,new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.5,metalness:0.0,clearcoat:0.6,clearcoatRoughness:0.3,sheen:0.45,sheenColor:new THREE.Color(0xff9aa0),sheenRoughness:0.5}));
+    m.scale.set(1.05,1.34,1.0);m.position.y=-0.15;return m;
   }
-  const ventGroup=new THREE.Group();
-  ventGroup.add(sculptMyocardium());
-  // innere Kammerhöhlen (beim Schnitt als dunkle Räume sichtbar)
-  const lvCav=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),mk(C.cav,0.9));lvCav.scale.set(0.55,1.0,0.55);lvCav.position.set(0.35,-0.45,-0.05);
-  const rvCav=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),mk(C.cav,0.9));rvCav.scale.set(0.5,0.85,0.42);rvCav.position.set(-0.5,-0.2,0.42);
-  ventGroup.add(lvCav,rvCav);
-  // Trabekel (Muskelbälkchen an der Innenwand)
-  for(let k=0;k<5;k++){const tb=new THREE.Mesh(new THREE.TorusGeometry(0.18+0.04*k,0.02,6,16),mk(C.myoDark));tb.position.set(0.35,-0.9+0.28*k,0.1);tb.rotation.x=1.2;ventGroup.add(tb);}
-  tagPart(ventGroup,"ventricles","Herzmuskel & Kammern (Myokard)","Die kräftige Muskelwand mit den beiden Kammern und der zulaufenden Spitze (Apex). Die linke Kammer hat die dickste Wand. Im Inneren sieht man beim Aufschneiden die Höhlen und die Muskelbälkchen (Trabekel).");
+  const ventricles=sculptMyocardium();
+  tagPart(ventricles,"ventricles","Herzmuskel & Kammern (Myokard)","Die kräftige Muskelwand mit den beiden Kammern und der zulaufenden Spitze (Apex). Die linke Kammer hat die dickste Wand und pumpt das Blut in den Körper. Das gelbliche Gewebe in den Furchen ist Epikardfett, in dem die Kranzgefäße liegen.");
 
   /* ---- Vorhöfe ---- */
-  const la=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),mk(C.atrium));la.scale.set(0.6,0.58,0.6);la.position.set(0.55,1.0,-0.5);
-  const laApp=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),mk(C.atrium));laApp.scale.set(0.3,0.24,0.38);laApp.position.set(0.78,0.78,0.2);
+  const la=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),tissue(C.atrium));la.scale.set(0.6,0.58,0.6);la.position.set(0.55,1.0,-0.5);
+  const laApp=new THREE.Mesh(new THREE.SphereGeometry(1,36,26),tissue(C.atrium));laApp.scale.set(0.3,0.24,0.38);laApp.position.set(0.78,0.78,0.2);
   const leftAtrium=new THREE.Group();leftAtrium.add(la,laApp);
-  tagPart(leftAtrium,"la","Linker Vorhof","Nimmt sauerstoffreiches Blut aus den Lungenvenen auf und leitet es durch die Mitralklappe in die linke Kammer.");
-  const ra=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),mk(C.atrium));ra.scale.set(0.64,0.64,0.6);ra.position.set(-0.82,0.72,0.05);
-  const raApp=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),mk(C.atrium));raApp.scale.set(0.3,0.26,0.36);raApp.position.set(-0.55,0.9,0.45);
+  tagPart(leftAtrium,"la","Linker Vorhof","Nimmt sauerstoffreiches Blut aus den vier Lungenvenen auf und leitet es durch die Mitralklappe in die linke Kammer.");
+  const ra=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),tissue(C.atrium));ra.scale.set(0.64,0.64,0.6);ra.position.set(-0.82,0.72,0.05);
+  const raApp=new THREE.Mesh(new THREE.SphereGeometry(1,36,26),tissue(C.atrium));raApp.scale.set(0.3,0.26,0.36);raApp.position.set(-0.55,0.9,0.45);
   const rightAtrium=new THREE.Group();rightAtrium.add(ra,raApp);
-  tagPart(rightAtrium,"ra","Rechter Vorhof","Sammelt sauerstoffarmes Blut aus den Hohlvenen und enthält den Sinusknoten — den Taktgeber des Herzens.");
+  tagPart(rightAtrium,"ra","Rechter Vorhof","Sammelt sauerstoffarmes Blut aus den Hohlvenen und enthält den Sinusknoten — den natürlichen Taktgeber des Herzens.");
 
   /* ---- Aorta + Bogen + Abgänge ---- */
-  const aorta=tube([[0.05,0.55,-0.05],[0.05,1.3,-0.1],[0.05,1.95,-0.15],[0.2,2.35,-0.25],[0.55,2.4,-0.55],[0.6,2.0,-0.95],[0.55,1.0,-1.05],[0.55,0.2,-1.05]],0.24,C.aorta);
-  const bc=tube([[0.18,2.32,-0.28],[0.0,2.85,-0.2],[-0.15,3.2,-0.15]],0.09,C.aorta);
-  const lcc=tube([[0.35,2.4,-0.4],[0.4,2.95,-0.4],[0.42,3.3,-0.4]],0.075,C.aorta);
-  const lsc=tube([[0.52,2.36,-0.5],[0.7,2.85,-0.55],[0.8,3.15,-0.6]],0.075,C.aorta);
+  const aorta=tube([[0.05,0.55,-0.05],[0.05,1.3,-0.1],[0.05,1.95,-0.15],[0.2,2.35,-0.25],[0.55,2.4,-0.55],[0.6,2.0,-0.95],[0.55,1.0,-1.05],[0.55,0.2,-1.05]],0.24,C.aorta,{cc:0.7});
+  const bc=tube([[0.18,2.32,-0.28],[0.0,2.85,-0.2],[-0.15,3.2,-0.15]],0.09,C.aorta,{cc:0.7});
+  const lcc=tube([[0.35,2.4,-0.4],[0.4,2.95,-0.4],[0.42,3.3,-0.4]],0.075,C.aorta,{cc:0.7});
+  const lsc=tube([[0.52,2.36,-0.5],[0.7,2.85,-0.55],[0.8,3.15,-0.6]],0.075,C.aorta,{cc:0.7});
   const aortaGrp=new THREE.Group();aortaGrp.add(aorta,bc,lcc,lsc);
-  tagPart(aortaGrp,"aorta","Aorta (Hauptschlagader)","Steigt aus der linken Kammer auf, bildet den Bogen und führt sauerstoffreiches Blut in den Körper. Drei Abgänge versorgen Kopf und Arme.");
+  tagPart(aortaGrp,"aorta","Aorta (Hauptschlagader)","Die größte Arterie des Körpers. Sie steigt aus der linken Kammer auf, bildet den Aortenbogen und führt sauerstoffreiches Blut in den Kreislauf. Drei Abgänge versorgen Kopf und Arme.");
 
   /* ---- Lungenarterienstamm ---- */
-  const pt=tube([[-0.45,0.55,0.45],[-0.3,1.2,0.25],[-0.1,1.7,-0.05],[0.0,1.9,-0.25]],0.22,C.pulm);
-  const rpa=tube([[0.0,1.9,-0.25],[-0.5,1.85,-0.4],[-1.0,1.7,-0.5]],0.12,C.pulm);
-  const lpa=tube([[0.0,1.9,-0.25],[0.5,1.9,-0.45],[0.95,1.7,-0.6]],0.12,C.pulm);
+  const pt=tube([[-0.45,0.55,0.45],[-0.3,1.2,0.25],[-0.1,1.7,-0.05],[0.0,1.9,-0.25]],0.22,C.pulm,{cc:0.7});
+  const rpa=tube([[0.0,1.9,-0.25],[-0.5,1.85,-0.4],[-1.0,1.7,-0.5]],0.12,C.pulm,{cc:0.7});
+  const lpa=tube([[0.0,1.9,-0.25],[0.5,1.9,-0.45],[0.95,1.7,-0.6]],0.12,C.pulm,{cc:0.7});
   const pulmGrp=new THREE.Group();pulmGrp.add(pt,rpa,lpa);
-  tagPart(pulmGrp,"pulmonary","Lungenarterienstamm","Führt sauerstoffarmes Blut aus der rechten Kammer zur Lunge und teilt sich in rechte und linke Lungenarterie.");
+  tagPart(pulmGrp,"pulmonary","Lungenarterienstamm","Führt sauerstoffarmes Blut aus der rechten Kammer zur Lunge. Er kreuzt vor der Aorta und teilt sich in rechte und linke Lungenarterie.");
 
   /* ---- Hohlvenen ---- */
-  const svc=tube([[-0.75,2.1,-0.05],[-0.78,1.5,0.0],[-0.8,0.95,0.05]],0.16,C.vein);
-  const ivc=tube([[-0.7,-1.0,-0.2],[-0.72,-0.4,-0.1],[-0.7,0.25,0.0]],0.17,C.vein);
+  const svc=tube([[-0.75,2.1,-0.05],[-0.78,1.5,0.0],[-0.8,0.95,0.05]],0.16,C.vein,{cc:0.6});
+  const ivc=tube([[-0.7,-1.0,-0.2],[-0.72,-0.4,-0.1],[-0.7,0.25,0.0]],0.17,C.vein,{cc:0.6});
   const cavae=new THREE.Group();cavae.add(svc,ivc);
-  tagPart(cavae,"cavae","Obere & untere Hohlvene","Die beiden größten Venen — sie münden in den rechten Vorhof.");
+  tagPart(cavae,"cavae","Obere & untere Hohlvene","Die beiden größten Venen — sie bringen das sauerstoffarme Blut aus dem Körper zurück in den rechten Vorhof.");
 
   /* ---- Lungenvenen ---- */
   const pv=new THREE.Group();
-  [[0.95,1.3,-0.85],[1.08,1.0,-0.95],[0.98,0.7,-0.95],[1.02,1.1,-0.6]].forEach(p=>{pv.add(tube([[p[0],p[1],p[2]],[0.62,p[1]*0.85+0.1,-0.62],[0.5,1.0,-0.5]],0.085,C.pulmVein));});
-  tagPart(pv,"pulmveins","Lungenvenen","Vier Venen, die sauerstoffreiches Blut aus der Lunge zum linken Vorhof bringen.");
+  [[0.95,1.3,-0.85],[1.08,1.0,-0.95],[0.98,0.7,-0.95],[1.02,1.1,-0.6]].forEach(p=>{pv.add(tube([[p[0],p[1],p[2]],[0.62,p[1]*0.85+0.1,-0.62],[0.5,1.0,-0.5]],0.085,C.pulmVein,{cc:0.6}));});
+  tagPart(pv,"pulmveins","Lungenvenen","Vier Venen, die das in der Lunge mit Sauerstoff angereicherte Blut zurück zum linken Vorhof bringen.");
 
   /* ---- Kranzarterien ---- */
-  const lmca=tube([[0.05,0.52,0.05],[0.12,0.48,0.32]],0.075,C.artery,0.4);
-  const lad=tube([[0.12,0.48,0.32],[0.02,0.1,0.56],[-0.04,-0.5,0.56],[-0.05,-1.15,0.46],[0.0,-1.7,0.32],[0.12,-2.05,0.16]],0.07,C.artery,0.4);
-  const diag1=tube([[0.0,-0.2,0.56],[0.38,-0.5,0.46],[0.62,-0.85,0.26]],0.045,C.artery,0.4);
-  const diag2=tube([[-0.03,-0.7,0.53],[0.32,-1.0,0.4],[0.52,-1.3,0.2]],0.045,C.artery,0.4);
+  const lmca=tube([[0.05,0.52,0.05],[0.12,0.48,0.32]],0.075,C.artery,{cc:0.75});
+  const lad=tube([[0.12,0.48,0.32],[0.02,0.1,0.56],[-0.04,-0.5,0.56],[-0.05,-1.15,0.46],[0.0,-1.7,0.32],[0.12,-2.05,0.16]],0.07,C.artery,{cc:0.75});
+  const diag1=tube([[0.0,-0.2,0.56],[0.38,-0.5,0.46],[0.62,-0.85,0.26]],0.045,C.artery,{cc:0.75});
+  const diag2=tube([[-0.03,-0.7,0.53],[0.32,-1.0,0.4],[0.52,-1.3,0.2]],0.045,C.artery,{cc:0.75});
   const lca=new THREE.Group();lca.add(lmca,lad,diag1,diag2);
-  tagPart(lca,"lad","Linke Koronararterie (LAD)","Versorgt Vorderwand und Scheidewand. Ihre Verstopfung ist der klassische Vorderwandinfarkt (Widowmaker).");
-  const cx=tube([[0.12,0.48,0.32],[0.62,0.55,0.1],[0.97,0.35,-0.25],[0.82,0.12,-0.65],[0.4,0.02,-0.85]],0.06,C.artery,0.4);
-  const om1=tube([[0.92,0.4,-0.15],[1.02,-0.1,-0.1],[0.86,-0.6,-0.05]],0.045,C.artery,0.4);
+  tagPart(lca,"lad","Linke Koronararterie (LAD)","Der vordere absteigende Ast zieht in der vorderen Furche zur Spitze und versorgt Vorderwand und Scheidewand. Ihre Verstopfung ist der klassische Vorderwandinfarkt.");
+  const cx=tube([[0.12,0.48,0.32],[0.62,0.55,0.1],[0.97,0.35,-0.25],[0.82,0.12,-0.65],[0.4,0.02,-0.85]],0.06,C.artery,{cc:0.75});
+  const om1=tube([[0.92,0.4,-0.15],[1.02,-0.1,-0.1],[0.86,-0.6,-0.05]],0.045,C.artery,{cc:0.75});
   const cxGrp=new THREE.Group();cxGrp.add(cx,om1);
-  tagPart(cxGrp,"circumflex","Ramus circumflexus","Verläuft in der linken Kranzfurche und versorgt Seiten- und Hinterwand.");
-  const rca=tube([[-0.15,0.5,0.15],[-0.72,0.5,0.3],[-1.0,0.25,-0.1],[-0.85,0.0,-0.55],[-0.35,-0.05,-0.8]],0.07,C.artery,0.4);
-  const pda=tube([[-0.35,-0.05,-0.8],[-0.2,-0.7,-0.65],[-0.1,-1.4,-0.45],[-0.02,-1.85,-0.25]],0.055,C.artery,0.4);
+  tagPart(cxGrp,"circumflex","Ramus circumflexus","Verläuft in der linken Kranzfurche um die Seitenwand und versorgt Seiten- und Hinterwand der linken Kammer.");
+  const rca=tube([[-0.15,0.5,0.15],[-0.72,0.5,0.3],[-1.0,0.25,-0.1],[-0.85,0.0,-0.55],[-0.35,-0.05,-0.8]],0.07,C.artery,{cc:0.75});
+  const pda=tube([[-0.35,-0.05,-0.8],[-0.2,-0.7,-0.65],[-0.1,-1.4,-0.45],[-0.02,-1.85,-0.25]],0.055,C.artery,{cc:0.75});
   const rcaGrp=new THREE.Group();rcaGrp.add(rca,pda);
-  tagPart(rcaGrp,"rca","Rechte Koronararterie (RCA)","Versorgt die rechte Kammer und (meist) die Hinterwand über die hintere absteigende Arterie.");
+  tagPart(rcaGrp,"rca","Rechte Koronararterie (RCA)","Versorgt die rechte Kammer und meist die Hinterwand über die hintere absteigende Arterie.");
 
   /* ---- Herzvenen ---- */
-  const gcv=tube([[0.05,-1.9,0.2],[0.0,-1.0,0.45],[0.1,-0.2,0.5],[0.5,0.45,0.2],[0.9,0.3,-0.3]],0.06,C.coroVein,0.45);
-  const cs=tube([[0.9,0.3,-0.3],[0.4,0.2,-0.75],[-0.2,0.2,-0.8],[-0.6,0.35,-0.5]],0.1,C.coroVein,0.45);
+  const gcv=tube([[0.05,-1.9,0.2],[0.0,-1.0,0.45],[0.1,-0.2,0.5],[0.5,0.45,0.2],[0.9,0.3,-0.3]],0.06,C.coroVein,{cc:0.6});
+  const cs=tube([[0.9,0.3,-0.3],[0.4,0.2,-0.75],[-0.2,0.2,-0.8],[-0.6,0.35,-0.5]],0.1,C.coroVein,{cc:0.6});
   const veinGrp=new THREE.Group();veinGrp.add(gcv,cs);
-  tagPart(veinGrp,"coronaryveins","Herzvenen & Sinus coronarius","Sammeln das verbrauchte Blut der Herzmuskulatur und münden in den rechten Vorhof.");
+  tagPart(veinGrp,"coronaryveins","Herzvenen & Sinus coronarius","Sammeln das verbrauchte Blut der Herzmuskulatur und münden über den Sinus coronarius in den rechten Vorhof.");
 
-  /* ---- Klappen mit Segeln (innen) ---- */
+  /* ---- Klappen mit Segeln (innere Komponente) ---- */
   const valves=new THREE.Group();
-  const ring=(x,y,z,r)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(r,0.05,12,28),mk(C.valve,0.4));t.position.set(x,y,z);t.rotation.x=Math.PI/2;return t;};
-  const leaflet=(x,y,z,r,rot)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(r,3),new THREE.MeshStandardMaterial({color:C.valve,roughness:0.4,side:THREE.DoubleSide}));m.position.set(x,y,z);m.rotation.set(-Math.PI/2.4,rot,0);return m;};
+  const ring=(x,y,z,r)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(r,0.05,12,28),tissue(C.valve,{cc:0.3,sheen:0.1}));t.position.set(x,y,z);t.rotation.x=Math.PI/2;return t;};
+  const leaflet=(x,y,z,r,rot)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(r,3),new THREE.MeshPhysicalMaterial({color:C.valve,roughness:0.45,side:THREE.DoubleSide,clearcoat:0.3}));m.position.set(x,y,z);m.rotation.set(-Math.PI/2.4,rot,0);return m;};
   valves.add(ring(-0.4,0.42,0.15,0.2),leaflet(-0.4,0.4,0.15,0.16,0),leaflet(-0.4,0.4,0.15,0.16,2.1),leaflet(-0.4,0.4,0.15,0.16,4.2));
   valves.add(ring(0.45,0.4,-0.15,0.19),leaflet(0.45,0.38,-0.15,0.15,0.5),leaflet(0.45,0.38,-0.15,0.15,3.6));
   valves.add(ring(0.05,0.52,-0.05,0.14));valves.add(ring(-0.42,0.6,0.42,0.13));
   tagPart(valves,"valves","Herzklappen","Vier Ventile als Einbahnstraße des Blutes: Trikuspidal- & Mitralklappe (mit Segeln) zwischen Vorhof und Kammer, Aorten- & Pulmonalklappe an den Ausgängen.");
 
-  /* ---- Septum + Papillarmuskeln + Sehnenfäden ---- */
-  const septum=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),mk(C.myoDark));septum.scale.set(0.13,1.05,0.66);septum.position.set(-0.05,-0.35,0.12);septum.rotation.z=0.05;
-  tagPart(septum,"septum","Kammerscheidewand (Septum)","Trennt linke und rechte Kammer. Durch ihren oberen Teil läuft das Erregungsleitungssystem.");
+  /* ---- Septum + Papillarmuskeln + Sehnenfäden (innere Komponenten) ---- */
+  const septum=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),tissue(0x5e1c22));septum.scale.set(0.13,1.05,0.66);septum.position.set(-0.05,-0.35,0.12);septum.rotation.z=0.05;
+  tagPart(septum,"septum","Kammerscheidewand (Septum)","Die muskulöse Wand zwischen linker und rechter Kammer. Durch ihren oberen Teil verläuft das Erregungsleitungssystem.");
   const papGrp=new THREE.Group();
-  const pap=(x,y,z)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.42,12),mk(C.myo));m.position.set(x,y,z);return m;};
+  const pap=(x,y,z)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.42,14),tissue(0x7a262c));m.position.set(x,y,z);return m;};
   papGrp.add(pap(0.25,-0.75,0.05),pap(0.52,-0.6,-0.15),pap(-0.45,-0.7,0.1));
-  papGrp.add(tube([[0.25,-0.55,0.05],[0.35,-0.1,-0.05],[0.4,0.35,-0.12]],0.016,C.valve,0.4));
-  papGrp.add(tube([[0.52,-0.4,-0.15],[0.48,-0.0,-0.14],[0.5,0.35,-0.16]],0.016,C.valve,0.4));
-  papGrp.add(tube([[-0.45,-0.5,0.1],[-0.42,-0.05,0.12],[-0.4,0.4,0.13]],0.016,C.valve,0.4));
-  tagPart(papGrp,"papillary","Papillarmuskeln & Sehnenfäden","Halten über feine Sehnenfäden (Chordae) die Segelklappen, damit sie beim Pumpen nicht zurückschlagen.");
+  papGrp.add(tube([[0.25,-0.55,0.05],[0.35,-0.1,-0.05],[0.4,0.35,-0.12]],0.016,C.valve,{cc:0.3,sheen:0.1}));
+  papGrp.add(tube([[0.52,-0.4,-0.15],[0.48,-0.0,-0.14],[0.5,0.35,-0.16]],0.016,C.valve,{cc:0.3,sheen:0.1}));
+  papGrp.add(tube([[-0.45,-0.5,0.1],[-0.42,-0.05,0.12],[-0.4,0.4,0.13]],0.016,C.valve,{cc:0.3,sheen:0.1}));
+  tagPart(papGrp,"papillary","Papillarmuskeln & Sehnenfäden","Halten über feine Sehnenfäden (Chordae tendineae) die Segelklappen, damit diese beim Pumpen nicht in die Vorhöfe zurückschlagen.");
 
-  g.add(ventGroup,leftAtrium,rightAtrium,aortaGrp,pulmGrp,cavae,pv,lca,cxGrp,rcaGrp,veinGrp,septum,papGrp,valves);
+  g.add(ventricles,leftAtrium,rightAtrium,aortaGrp,pulmGrp,cavae,pv,lca,cxGrp,rcaGrp,veinGrp,septum,papGrp,valves);
 
-  /* ---- Teardown-Richtungen (Explosionsansicht wie ein Geräte-Teardown) ---- */
-  const EX={ventricles:[0,-0.2,-1.9],valves:[0,1.7,0.3],septum:[1.5,0.3,0.3],papillary:[0,-1.6,0.6],
-    la:[0.9,1.5,-0.5],ra:[-1.1,1.4,-0.3],aorta:[0.4,2.0,-0.7],pulmonary:[-0.6,1.7,0.5],
-    cavae:[-1.6,0.9,0.0],pulmveins:[1.5,1.0,-0.6],lad:[0.1,-0.3,1.9],circumflex:[1.8,0.2,0.6],
-    rca:[-1.8,0.2,0.6],coronaryveins:[0.2,-0.3,-1.9]};
+  /* ---- Teardown-Richtungen (Explosionsansicht) ---- */
+  const EX={ventricles:[0,-0.2,-2.1],valves:[0,1.9,0.3],septum:[1.7,0.3,0.3],papillary:[0,-1.8,0.6],
+    la:[1.0,1.6,-0.5],ra:[-1.2,1.5,-0.3],aorta:[0.4,2.2,-0.7],pulmonary:[-0.7,1.9,0.5],
+    cavae:[-1.8,1.0,0.0],pulmveins:[1.7,1.1,-0.6],lad:[0.1,-0.3,2.1],circumflex:[2.0,0.2,0.6],
+    rca:[-2.0,0.2,0.6],coronaryveins:[0.2,-0.3,-2.1]};
   g.children.forEach(c=>{if(c.userData.part&&EX[c.userData.part.partId])c.userData.explodeVec=new THREE.Vector3(...EX[c.userData.part.partId]);});
-
   return {group:g,zoom:9,spin:0.0035};
 }
 
-const INTRO="Das Herz pumpt rund 100.000 Mal am Tag Blut durch den Körper. Vier Räume, vier Klappen, eigene Versorgung über die Kranzgefäße. Wähle unten ein Instrument zum Operieren, oder ziehe es im Teardown-Modus in seine Einzelteile auseinander, um die Klappen und Papillarmuskeln im Inneren zu sehen.";
+const INTRO="Das Herz pumpt rund 100.000 Mal am Tag Blut durch den Körper. Vier Räume, vier Klappen, eigene Versorgung über die Kranzgefäße. Zieh es mit der Geste oder dem Knopf Auseinanderziehen in seine Einzelteile — auch die inneren Strukturen wie Klappen, Scheidewand und Papillarmuskeln schweben dann frei und lassen sich einzeln anklicken.";
 
 /* =====================================================================
-   4) VIEWER + INSTRUMENTE
+   3) VIEWER
    ===================================================================== */
 const sceneEl=document.getElementById("scene");
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 renderer.setSize(window.innerWidth,window.innerHeight);
-renderer.localClippingEnabled=true;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
 sceneEl.appendChild(renderer.domElement);
 
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,100);
-scene.add(new THREE.AmbientLight(0x99ffee,0.55));
-const key=new THREE.DirectionalLight(0xffffff,1.5);key.position.set(4,5,6);scene.add(key);
+// Umgebungslicht für „nasse" Reflexionen (RoomEnvironment), mit Fallback
+(async()=>{
+  try{
+    const mod=await import("three/addons/environments/RoomEnvironment.js");
+    const pmrem=new THREE.PMREMGenerator(renderer);
+    scene.environment=pmrem.fromScene(new mod.RoomEnvironment(),0.04).texture;
+  }catch(e){console.warn("Env fallback",e);}
+})();
+scene.add(new THREE.AmbientLight(0xb0c4d0,0.35));
+const key=new THREE.DirectionalLight(0xffffff,1.7);key.position.set(4,6,7);scene.add(key);
 const fill=new THREE.DirectionalLight(0xbfe9ff,0.5);fill.position.set(-5,2,-4);scene.add(fill);
-const rim=new THREE.PointLight(0xff5b6e,1.5,40);rim.position.set(-6,-3,4);scene.add(rim);
+const rim=new THREE.PointLight(0xff7a86,1.4,40);rim.position.set(-6,-3,5);scene.add(rim);
+const rim2=new THREE.PointLight(0x9ad6ff,0.8,40);rim2.position.set(6,-2,4);scene.add(rim2);
 
 const group=new THREE.Group();scene.add(group);
-const clipPlane=new THREE.Plane(new THREE.Vector3(0,0,-1),5);
-
 let targetRotX=0,targetRotY=0;
 const ZOOM_MIN=4,ZOOM_MAX=16;
 let autoRotate=true,beating=true,interacting=false;
-let openMode="cut";let targetOpen=0,curOpen=0;
+let targetOpen=0,curOpen=0;
 
 const built=buildHeart();
 const spin=built.spin, defaultZoom=built.zoom;
 let targetZoom=defaultZoom;
 camera.position.set(0,0,defaultZoom);
 group.add(built.group);
-function applyClip(o){if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.side=THREE.DoubleSide;m.clippingPlanes=[clipPlane];m.clipShadows=true;});}}
-group.traverse(applyClip);
-const topParts=built.group.children.filter(c=>c.userData&&c.userData.part).map(c=>({obj:c,base:c.position.clone(),ex:c.userData.explodeVec||c.position.clone().normalize().multiplyScalar(1.5)}));
+const topParts=built.group.children.filter(c=>c.userData&&c.userData.part).map(c=>({obj:c,base:c.position.clone(),ex:c.userData.explodeVec||c.position.clone().normalize().multiplyScalar(1.6)}));
 
-// Schnittspuren-Schicht (rotiert mit dem Herz)
-const incisionLayer=new THREE.Group();built.group.add(incisionLayer);
-const incMat=new THREE.MeshStandardMaterial({color:0xff3344,emissive:0x7a0010,roughness:0.5,clippingPlanes:[clipPlane],side:THREE.DoubleSide});
-let lastMark=null,markCount=0;
-function addMark(worldPoint,kind){
-  if(markCount>70)return;
-  const local=built.group.worldToLocal(worldPoint.clone());
-  if(lastMark&&local.distanceTo(lastMark)<0.06)return;
-  lastMark=local.clone();markCount++;
-  let m;
-  if(kind==="clamp"){m=new THREE.Mesh(new THREE.TorusGeometry(0.09,0.03,8,16),new THREE.MeshStandardMaterial({color:0xdfe6ee,metalness:0.8,roughness:0.3,clippingPlanes:[clipPlane],side:THREE.DoubleSide}));}
-  else{m=new THREE.Mesh(new THREE.SphereGeometry(0.045,10,8),incMat);}
-  m.position.copy(local);incisionLayer.add(m);
-}
-
-/* ---- Instrumente ---- */
-function buildInstruments(){
-  const steel=new THREE.MeshStandardMaterial({color:0xdfe6ee,roughness:0.25,metalness:0.9});
-  const handle=new THREE.MeshStandardMaterial({color:0x222b35,roughness:0.5,metalness:0.5});
-  const inst={};
-  const scalpel=new THREE.Group();
-  const sh=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.85,16),handle);sh.rotation.z=Math.PI/2;sh.position.x=-0.45;scalpel.add(sh);
-  const blade=new THREE.Mesh(new THREE.BoxGeometry(0.36,0.16,0.012),steel);blade.position.set(0.1,0.03,0);scalpel.add(blade);
-  scalpel.userData.tip=new THREE.Vector3(0.3,-0.02,0);inst.scalpel=scalpel;
-  const clamp=new THREE.Group();
-  const chh=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,0.6,12),handle);chh.rotation.z=Math.PI/2;chh.position.x=-0.42;clamp.add(chh);
-  const pr1=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.03,0.03),steel);pr1.position.set(0.05,0.05,0);pr1.rotation.z=-0.18;clamp.add(pr1);
-  const pr2=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.03,0.03),steel);pr2.position.set(0.05,-0.05,0);pr2.rotation.z=0.18;clamp.add(pr2);
-  clamp.userData.tip=new THREE.Vector3(0.28,0,0);inst.clamp=clamp;
-  const probe=new THREE.Group();
-  const prb=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.8,12),steel);prb.rotation.z=Math.PI/2;prb.position.x=-0.3;probe.add(prb);
-  const ball=new THREE.Mesh(new THREE.SphereGeometry(0.05,16,12),steel);ball.position.x=0.14;probe.add(ball);
-  probe.userData.tip=new THREE.Vector3(0.18,0,0);inst.probe=probe;
-  for(const k in inst){inst[k].visible=false;inst[k].rotation.set(0.25,-0.35,-0.6);scene.add(inst[k]);}
-  return inst;
-}
-const instruments=buildInstruments();
-let activeTool="none";
-const pointer={x:0,y:0};         // NDC
-let mouseTrigger=false,handTrigger=false;
-const _ray=new THREE.Raycaster();const _vtmp=new THREE.Vector3();
-function pointerToWorldOnZ0(){
-  _vtmp.set(pointer.x,pointer.y,0.5).unproject(camera);
-  const dir=_vtmp.sub(camera.position).normalize();
-  const dist=(0-camera.position.z)/dir.z;
-  return camera.position.clone().add(dir.multiplyScalar(dist));
-}
-function updateInstrument(){
-  for(const k in instruments)instruments[k].visible=(k===activeTool);
-  if(activeTool==="none")return;
-  const tool=instruments[activeTool];
-  const target=pointerToWorldOnZ0();
-  const rTip=tool.userData.tip.clone().applyEuler(tool.rotation);
-  tool.position.copy(target).sub(rTip);
-  tool.userData.tipWorld=target;
-}
-function raycastHeart(){
-  _ray.setFromCamera(new THREE.Vector2(pointer.x,pointer.y),camera);
-  const hits=_ray.intersectObjects(built.group.children,true);
-  for(const h of hits){let o=h.object;while(o&&!(o.userData&&o.userData.part))o=o.parent;if(o&&o.userData.part)return{part:o.userData.part,point:h.point};}
-  return null;
-}
-let probeThrottle=0,clampEdge=false;
-function operate(){
-  const hit=raycastHeart();if(!hit)return;
-  if(activeTool==="scalpel"){
-    openMode="cut";targetOpen=Math.min(1,targetOpen+0.012);openBtn.classList.add("active");
-    addMark(hit.point,"cut");
-  } else if(activeTool==="probe"){
-    const now=performance.now();if(now-probeThrottle>500){probeThrottle=now;openPanel(hit.part);}
-  } else if(activeTool==="clamp"){
-    if(!clampEdge){clampEdge=true;addMark(hit.point,"clamp");}
-  }
-}
-
-/* ---- Maus / Trackpad ---- */
 let dragging=false,lastMX=0,lastMY=0,moved=0;
-function setPointerFromClient(cx,cy){pointer.x=(cx/window.innerWidth)*2-1;pointer.y=1-(cy/window.innerHeight)*2;}
-renderer.domElement.addEventListener("pointerdown",e=>{dragging=true;moved=0;lastMX=e.clientX;lastMY=e.clientY;setPointerFromClient(e.clientX,e.clientY);if(activeTool!=="none"){mouseTrigger=true;}});
-window.addEventListener("pointerup",e=>{if(dragging&&moved<6&&activeTool==="none")tryPick(e.clientX,e.clientY);dragging=false;mouseTrigger=false;clampEdge=false;});
-window.addEventListener("pointermove",e=>{setPointerFromClient(e.clientX,e.clientY);if(!dragging)return;moved+=Math.abs(e.clientX-lastMX)+Math.abs(e.clientY-lastMY);if(activeTool!=="none"){lastMX=e.clientX;lastMY=e.clientY;return;}interacting=true;targetRotY+=(e.clientX-lastMX)*0.006;targetRotX+=(e.clientY-lastMY)*0.006;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastMX=e.clientX;lastMY=e.clientY;});
+renderer.domElement.addEventListener("pointerdown",e=>{dragging=true;moved=0;lastMX=e.clientX;lastMY=e.clientY;});
+window.addEventListener("pointerup",e=>{if(dragging&&moved<6)tryPick(e.clientX,e.clientY);dragging=false;});
+window.addEventListener("pointermove",e=>{if(!dragging)return;moved+=Math.abs(e.clientX-lastMX)+Math.abs(e.clientY-lastMY);interacting=true;targetRotY+=(e.clientX-lastMX)*0.006;targetRotX+=(e.clientY-lastMY)*0.006;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastMX=e.clientX;lastMY=e.clientY;});
 renderer.domElement.addEventListener("wheel",e=>{e.preventDefault();interacting=true;targetZoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,targetZoom+e.deltaY*0.005));},{passive:false});
 
-/* ---- Buttons ---- */
 const rotBtn=document.getElementById("rotbtn");
 rotBtn.addEventListener("click",()=>{autoRotate=!autoRotate;rotBtn.classList.toggle("active",autoRotate);});
 const beatBtn=document.getElementById("beatbtn");
 beatBtn.addEventListener("click",()=>{beating=!beating;beatBtn.classList.toggle("active",beating);if(!beating)group.scale.setScalar(1);});
-document.getElementById("resetbtn").addEventListener("click",()=>{targetRotX=0;targetRotY=0;targetZoom=defaultZoom;targetOpen=0;incisionLayer.clear();markCount=0;lastMark=null;});
+document.getElementById("resetbtn").addEventListener("click",()=>{targetRotX=0;targetRotY=0;targetZoom=defaultZoom;targetOpen=0;});
 const openBtn=document.getElementById("openbtn");
 openBtn.addEventListener("click",()=>{targetOpen=targetOpen>0.05?0:1;openBtn.classList.toggle("active",targetOpen>0.05);});
-const modeBtn=document.getElementById("modebtn");
-modeBtn.addEventListener("click",()=>{openMode=openMode==="cut"?"explode":"cut";modeBtn.textContent="Modus: "+(openMode==="cut"?"Schnitt":"Teardown");});
-// Instrumenten-Auswahl
-const legendInner=document.getElementById("legendInner");
-const legendTool='<div><span class="k">Zeigefinger</span> <span class="sep">&#8594;</span> Instrument führen</div><div><span class="k">Pinch</span> <span class="sep">&#8594;</span> anwenden</div><div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div>';
-const legendView='<div><span class="k">Pinch</span> <span class="sep">&#8594;</span> drehen</div><div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div><div><span class="k">2 Hände + Pinch</span> <span class="sep">&#8594;</span> auseinanderziehen</div><div><span class="k">Klick</span> <span class="sep">&#8594;</span> Struktur-Info</div>';
-document.querySelectorAll(".tool").forEach(b=>b.addEventListener("click",()=>{
-  document.querySelectorAll(".tool").forEach(x=>x.classList.remove("active"));b.classList.add("active");
-  activeTool=b.dataset.tool;legendInner.innerHTML=activeTool==="none"?legendView:legendTool;
-}));
 
-/* ---- Info-Panel (Klick) ---- */
+const raycaster=new THREE.Raycaster();const mouse=new THREE.Vector2();
 const panel=document.getElementById("panel");
 const pTitle=document.getElementById("ptitle"),pInfo=document.getElementById("pinfo");
 const pNote=document.getElementById("pnote"),pSaved=document.getElementById("saved");
 const pHead=document.getElementById("phead"),noteWrap=document.getElementById("note-wrap");
 let currentPartId=null;
-function tryPick(x,y){pointer.x=(x/window.innerWidth)*2-1;pointer.y=1-(y/window.innerHeight)*2;const hit=raycastHeart();if(hit)openPanel(hit.part);}
+function tryPick(x,y){mouse.x=(x/window.innerWidth)*2-1;mouse.y=-(y/window.innerHeight)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(built.group.children,true);for(const h of hits){let o=h.object;while(o&&!(o.userData&&o.userData.part))o=o.parent;if(o&&o.userData.part){openPanel(o.userData.part);return;}}}
 function noteKey(id){return "anote:heart:"+id;}
 function openPanel(part){
   currentPartId=part.partId;pTitle.textContent=part.label;pInfo.textContent=part.info;
@@ -459,21 +365,16 @@ document.getElementById("pclose").addEventListener("click",()=>panel.classList.r
 document.getElementById("infobtn").addEventListener("click",()=>openPanel({partId:null,label:"Menschliches Herz",info:INTRO,overview:true}));
 setTimeout(()=>openPanel({partId:null,label:"Menschliches Herz",info:INTRO,overview:true}),400);
 
-/* ---- Render-Schleife ---- */
 const _v=new THREE.Vector3();
 function animate(){
   requestAnimationFrame(animate);
-  if(autoRotate&&!interacting&&activeTool==="none")targetRotY+=spin;
+  if(autoRotate&&!interacting)targetRotY+=spin;
   group.rotation.x+=(targetRotX-group.rotation.x)*0.12;
   group.rotation.y+=(targetRotY-group.rotation.y)*0.12;
   camera.position.z+=(targetZoom-camera.position.z)*0.12;
   curOpen+=(targetOpen-curOpen)*0.12;
-  if(openMode==="cut"){clipPlane.constant=5-curOpen*5.5;topParts.forEach(p=>p.obj.position.copy(p.base));}
-  else{clipPlane.constant=5;topParts.forEach(p=>{p.obj.position.copy(p.base).add(_v.copy(p.ex).multiplyScalar(curOpen));});}
-  if(beating&&activeTool==="none"){const t=performance.now()/1000*(72/60);const ph=t%1;const pulse=Math.exp(-((ph)*(ph))/0.004)+0.6*Math.exp(-((ph-0.28)*(ph-0.28))/0.004);group.scale.setScalar(1+0.045*pulse);}
-  group.updateMatrixWorld();
-  updateInstrument();
-  if(activeTool!=="none"&&(mouseTrigger||handTrigger))operate();
+  topParts.forEach(p=>{p.obj.position.copy(p.base).add(_v.copy(p.ex).multiplyScalar(curOpen));});
+  if(beating){const t=performance.now()/1000*(72/60);const ph=t%1;const pulse=Math.exp(-((ph)*(ph))/0.004)+0.6*Math.exp(-((ph-0.28)*(ph-0.28))/0.004);group.scale.setScalar(1+0.045*pulse*(1-curOpen));}
   interacting=false;
   renderer.render(scene,camera);
 }
@@ -494,13 +395,12 @@ document.getElementById("iclose").addEventListener("click",()=>infoPanel.classLi
 })();
 
 /* =====================================================================
-   5) HAND-TRACKING (optimiert: Zeigefinger-Pointer + Pinch-Trigger)
+   4) HAND-TRACKING
    ===================================================================== */
 const video=document.getElementById("video"),overlay=document.getElementById("overlay"),octx=overlay.getContext("2d");
 const camState=document.getElementById("camstate"),handState=document.getElementById("handstate"),dot=document.getElementById("dot"),errEl=document.getElementById("err");
 let handLandmarker=null,lastVideoTime=-1,pinching=false,lastPX=0,lastPY=0,twoStartDist=null,twoStartZoom=null,openStartDist=null,openStartVal=null;
 const fPX=new OneEuro(1.0,0.015),fPY=new OneEuro(1.0,0.015),fDist=new OneEuro(1.0,0.01),fOpen=new OneEuro(1.0,0.01);
-const fTipX=new OneEuro(1.6,0.008),fTipY=new OneEuro(1.6,0.008);
 const CONN=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 const d2=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
@@ -518,18 +418,15 @@ async function startCamera(){
 function detectLoop(){if(handLandmarker&&video.readyState>=2&&video.currentTime!==lastVideoTime){lastVideoTime=video.currentTime;handleHands(handLandmarker.detectForVideo(video,performance.now()));}requestAnimationFrame(detectLoop);}
 function handleHands(res){
   const hands=res.landmarks||[];handState.textContent=hands.length;
-  octx.clearRect(0,0,overlay.width,overlay.height);octx.lineWidth=2;
-  for(const lm of hands){octx.strokeStyle="rgba(45,212,191,.7)";octx.fillStyle="#aef7ec";for(const [a,b] of CONN){octx.beginPath();octx.moveTo(lm[a].x*overlay.width,lm[a].y*overlay.height);octx.lineTo(lm[b].x*overlay.width,lm[b].y*overlay.height);octx.stroke();}for(const p of lm){octx.beginPath();octx.arc(p.x*overlay.width,p.y*overlay.height,3,0,6.28);octx.fill();}
-    // Zeigefinger-Reticle
-    octx.strokeStyle="#f5a524";octx.beginPath();octx.arc(lm[8].x*overlay.width,lm[8].y*overlay.height,9,0,6.28);octx.stroke();}
+  octx.clearRect(0,0,overlay.width,overlay.height);octx.strokeStyle="rgba(45,212,191,.7)";octx.fillStyle="#aef7ec";octx.lineWidth=2;
+  for(const lm of hands){for(const [a,b] of CONN){octx.beginPath();octx.moveTo(lm[a].x*overlay.width,lm[a].y*overlay.height);octx.lineTo(lm[b].x*overlay.width,lm[b].y*overlay.height);octx.stroke();}for(const p of lm){octx.beginPath();octx.arc(p.x*overlay.width,p.y*overlay.height,3,0,6.28);octx.fill();}}
   const now=performance.now();
-  handTrigger=false;
   if(hands.length>=2){
     pinching=false;
     const sizeA=Math.max(d2(hands[0][0],hands[0][9]),1e-4),sizeB=Math.max(d2(hands[1][0],hands[1][9]),1e-4);
     const pinA=d2(hands[0][4],hands[0][8])/sizeA,pinB=d2(hands[1][4],hands[1][8])/sizeB;
     const wristDist=d2(hands[0][0],hands[1][0]);
-    if(pinA<0.45&&pinB<0.45&&activeTool==="none"){
+    if(pinA<0.45&&pinB<0.45){
       twoStartDist=null;const d=fOpen.filter(wristDist,now);
       if(openStartDist===null){openStartDist=d;openStartVal=targetOpen;}
       interacting=true;targetOpen=Math.max(0,Math.min(1,openStartVal+(d-openStartDist)*2.2));
@@ -544,18 +441,10 @@ function handleHands(res){
   twoStartDist=null;openStartDist=null;
   if(hands.length===1){
     const lm=hands[0];const handSize=Math.max(d2(lm[0],lm[9]),1e-4);const ratio=d2(lm[4],lm[8])/handSize;
-    if(activeTool!=="none"){
-      const tx=fTipX.filter(lm[8].x,now),ty=fTipY.filter(lm[8].y,now);
-      pointer.x=1-2*tx;pointer.y=1-2*ty;
-      if(!pinching&&ratio<0.40)pinching=true;else if(pinching&&ratio>0.55)pinching=false;
-      handTrigger=pinching;if(handTrigger)clampEdge=clampEdge; // edge handled in operate via clampEdge reset on release
-      if(!pinching)clampEdge=false;
-    } else {
-      const px=fPX.filter(1-(lm[4].x+lm[8].x)/2,now),py=fPY.filter((lm[4].y+lm[8].y)/2,now);
-      if(!pinching&&ratio<0.40){pinching=true;lastPX=px;lastPY=py;}
-      else if(pinching&&ratio>0.55){pinching=false;}
-      if(pinching){interacting=true;targetRotY+=(px-lastPX)*5.0;targetRotX+=(py-lastPY)*5.0;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastPX=px;lastPY=py;}
-    }
+    const px=fPX.filter(1-(lm[4].x+lm[8].x)/2,now),py=fPY.filter((lm[4].y+lm[8].y)/2,now);
+    if(!pinching&&ratio<0.40){pinching=true;lastPX=px;lastPY=py;}
+    else if(pinching&&ratio>0.55){pinching=false;}
+    if(pinching){interacting=true;targetRotY+=(px-lastPX)*5.0;targetRotX+=(py-lastPY)*5.0;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastPX=px;lastPY=py;}
     return;
   }
   pinching=false;
