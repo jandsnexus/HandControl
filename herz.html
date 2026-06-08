@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Menschliches Herz — Anatomie Explorer</title>
+<title>Menschliches Herz — Anatomie Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -25,51 +25,67 @@
   .brand span{font-size:11px;color:var(--text-dim);letter-spacing:1px}
   #status{font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:right;line-height:1.6}
   #status b{color:var(--accent);font-weight:500}
-  #legend{bottom:20px;left:22px;font-size:11px;color:var(--text-dim);line-height:1.9;letter-spacing:.5px;max-width:240px}
+  #legend{bottom:20px;left:22px;font-size:11px;color:var(--text-dim);line-height:1.9;letter-spacing:.5px;max-width:250px}
   #legend .k{color:var(--text)} #legend .sep{color:var(--accent-dim)}
   #cam{bottom:20px;right:22px;width:200px;height:150px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2)}
   #cam.hidden{display:none}
   #video,#overlay{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1)}
   #video{object-fit:cover}
   #camlabel{position:absolute;top:6px;left:8px;z-index:2;font-size:9px;letter-spacing:1px;color:var(--accent);text-shadow:0 0 6px var(--bg)}
-  #tools{top:64px;right:22px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  #tools{top:64px;right:22px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;max-height:calc(100vh - 90px);overflow:auto}
   .btn{pointer-events:auto;font-family:inherit;font-size:11px;letter-spacing:1px;color:var(--text);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;white-space:nowrap}
   .btn:hover{border-color:var(--accent);color:var(--accent)}
   .btn.active{border-color:var(--accent);color:var(--accent)}
-  #panel{position:fixed;z-index:12;top:50%;right:22px;transform:translateY(-50%);width:300px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px;opacity:0;pointer-events:none;transition:opacity .25s}
-  #panel.show{opacity:1;pointer-events:auto}
+  .btn.warnactive{border-color:var(--warn);color:var(--warn)}
+  .side{position:fixed;z-index:12;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+  .side.show{opacity:1;pointer-events:auto}
+  .side h4{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+  .xclose{position:absolute;top:10px;right:12px;cursor:pointer;color:var(--text-dim);background:none;border:none;font-size:18px;font-family:inherit}
+  .xclose:hover{color:var(--text)}
+  #panel{top:50%;right:22px;transform:translateY(-50%);width:300px}
   #panel .ph{display:flex;align-items:center;gap:8px;margin-bottom:10px}
   #panel .ph .pdot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
   #panel .ph.ov .pdot{background:var(--accent)}
   #panel h3{font-size:15px;font-weight:700}
   #panel .pinfo{font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px}
+  #panel .pinfo b{color:var(--text)}
   #note-wrap label{font-size:10px;letter-spacing:1px;color:var(--accent);text-transform:uppercase}
-  #panel textarea{width:100%;margin-top:6px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px;resize:vertical;min-height:60px}
+  #panel textarea{width:100%;margin-top:6px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px;resize:vertical;min-height:54px}
   #panel textarea:focus{outline:none;border-color:var(--accent)}
-  #pclose{position:absolute;top:12px;right:14px;cursor:pointer;color:var(--text-dim);background:none;border:none;font-size:18px;font-family:inherit}
-  #pclose:hover{color:var(--text)}
   #saved{font-size:10px;color:var(--accent);margin-top:6px;height:12px;letter-spacing:1px}
-  #info{position:fixed;z-index:12;top:50%;left:22px;transform:translateY(-50%);width:256px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
-  #info.show{opacity:1;pointer-events:auto}
-  #info h4{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
-  #ekg{width:100%;height:70px;display:block;background:var(--bg);border:1px solid var(--line);border-radius:8px}
-  #info .bpm{font-size:11px;color:var(--text-dim);margin:6px 0 10px;letter-spacing:1px}
-  #info .bpm b{color:var(--text)}
-  #info .facts{font-size:11px;color:var(--text-dim);line-height:1.7}
-  #info .facts div{padding:3px 0;border-bottom:1px solid rgba(45,212,191,.07);display:flex;justify-content:space-between;gap:10px}
-  #info .facts b{color:var(--text);text-align:right}
-  #iclose{position:absolute;top:10px;right:12px;cursor:pointer;color:var(--text-dim);background:none;border:none;font-size:18px;font-family:inherit}
-  #iclose:hover{color:var(--text)}
+  #values{top:50%;left:22px;transform:translateY(-50%);width:262px}
+  #ekg{width:100%;height:64px;display:block;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+  #values .row{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:var(--text-dim);padding:4px 0;border-bottom:1px solid rgba(45,212,191,.07)}
+  #values .row b{color:var(--text)}
+  #values .hrline{margin:10px 0 4px;font-size:11px;color:var(--text-dim);letter-spacing:1px}
+  #values input[type=range]{width:100%;accent-color:var(--accent)}
+  #values .mini{display:flex;gap:6px;margin:8px 0 4px}
+  #values .mini .btn{flex:1;justify-content:center;padding:6px}
+  #layers{top:64px;left:22px;width:230px}
+  #layers .lay{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid rgba(45,212,191,.07);font-size:12px;cursor:pointer}
+  #layers .lay:last-child{border-bottom:none}
+  #layers .sw{width:34px;height:18px;border-radius:9px;background:#243;position:relative;transition:.2s;flex:0 0 auto}
+  #layers .sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#6b8a86;transition:.2s}
+  #layers .lay.on .sw{background:var(--accent-dim)}
+  #layers .lay.on .sw::after{left:18px;background:var(--accent)}
+  #layers .swatch{width:10px;height:10px;border-radius:2px;flex:0 0 auto}
+  #layers .name{flex:1;color:var(--text)}
+  #section{bottom:74px;left:50%;transform:translateX(-50%);width:300px;display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:opacity .25s}
+  #section.show{opacity:1;pointer-events:auto}
+  #section input{flex:1;accent-color:var(--accent)}
+  #section span{font-size:10px;color:var(--text-dim);letter-spacing:1px}
+  #banner{top:14px;left:50%;transform:translateX(-50%);background:rgba(245,165,36,.12);border:1px solid var(--warn);color:var(--warn);font-size:11px;letter-spacing:.5px;padding:8px 14px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:80vw;text-align:center}
+  #banner.show{opacity:1}
   #gate{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px;background:radial-gradient(circle at 50% 40%,rgba(13,20,27,.6),var(--bg));backdrop-filter:blur(2px)}
   #gate.gone{opacity:0;pointer-events:none;transition:opacity .6s}
   #gate h2{font-size:22px;font-weight:700}
-  #gate p{font-size:13px;color:var(--text-dim);max-width:460px;line-height:1.7}
+  #gate p{font-size:13px;color:var(--text-dim);max-width:470px;line-height:1.7}
   #start{pointer-events:auto;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bg);background:var(--accent);border:none;border-radius:8px;padding:14px 34px;cursor:pointer;box-shadow:0 0 30px rgba(45,212,191,.4);transition:.2s}
   #start:hover{transform:translateY(-2px);box-shadow:0 0 44px rgba(45,212,191,.6)}
   #skip{pointer-events:auto;background:none;border:none;cursor:pointer;color:var(--text-dim);font-family:inherit;font-size:11px;letter-spacing:1px;text-decoration:underline;text-underline-offset:4px}
   #skip:hover{color:var(--text)}
-  #err{color:var(--warn);font-size:12px;min-height:16px;max-width:460px}
-  @media(max-width:640px){#cam{width:130px;height:98px}#panel{width:calc(100% - 44px);top:auto;bottom:170px;transform:none}#tools{top:58px;right:12px}#info{left:12px;right:12px;width:auto;top:auto;bottom:170px;transform:none}#legend{display:none}}
+  #err{color:var(--warn);font-size:12px;min-height:16px;max-width:470px}
+  @media(max-width:680px){#cam{width:120px;height:90px}#panel,#values,#layers{width:calc(100% - 30px);left:15px;right:15px;top:auto;bottom:120px;transform:none}#tools{top:56px;right:10px}#legend{display:none}#section{width:90vw}}
 </style>
 <script type="importmap">
 { "imports": {
@@ -84,54 +100,76 @@
     <div class="brand">
       <a class="back" href="index.html" title="Übersicht">&#8592;</a>
       <div class="dot" id="dot"></div>
-      <div><h1>Menschliches Herz</h1><span>Realistisches Modell · Teardown · Handtracking</span></div>
+      <div><h1>Menschliches Herz</h1><span>Anatomie-Lab · Schichten · Klinik · Handtracking</span></div>
     </div>
     <div id="status">Kamera: <b id="camstate">aus</b><br>Hände: <b id="handstate">0</b></div>
   </div>
+
   <div id="tools" class="hud">
     <button class="btn" id="infobtn">&#9432; Überblick</button>
+    <button class="btn" id="layerbtn">&#9783; Schichten</button>
     <button class="btn" id="openbtn">&#9697; Auseinanderziehen</button>
+    <button class="btn" id="sectionbtn">&#9707; Schnittebene</button>
+    <button class="btn" id="clinbtn">&#9888; Infarkt zeigen</button>
     <button class="btn active" id="rotbtn">&#8635; Auto-Drehung</button>
     <button class="btn active" id="beatbtn">&#9829; Herzschlag</button>
-    <button class="btn" id="databtn">&#9636; EKG &amp; Fakten</button>
+    <button class="btn" id="databtn">&#9636; Werte &amp; EKG</button>
     <button class="btn" id="resetbtn">&#8634; Zurücksetzen</button>
   </div>
+
   <div id="legend" class="hud">
     <div><span class="k">Pinch</span> <span class="sep">&#8594;</span> drehen</div>
     <div><span class="k">2 Hände</span> <span class="sep">&#8594;</span> zoomen</div>
     <div><span class="k">2 Hände + Pinch auseinander</span> <span class="sep">&#8594;</span> Teardown</div>
-    <div><span class="k">Klick auf ein Teil</span> <span class="sep">&#8594;</span> Info</div>
+    <div><span class="k">Klick auf ein Teil</span> <span class="sep">&#8594;</span> Wissen</div>
   </div>
+
   <div id="cam" class="hud hidden">
     <span id="camlabel">LIVE</span>
     <video id="video" autoplay playsinline muted></video>
     <canvas id="overlay"></canvas>
   </div>
-  <div id="panel">
-    <button id="pclose">&times;</button>
+
+  <div id="layers" class="side hud">
+    <button class="xclose" id="layerclose">&times;</button>
+    <h4>Schichten</h4>
+    <div id="layerlist"></div>
+  </div>
+
+  <div id="panel" class="side hud">
+    <button class="xclose" id="pclose">&times;</button>
     <div class="ph" id="phead"><span class="pdot"></span><h3 id="ptitle"></h3></div>
     <p class="pinfo" id="pinfo"></p>
     <div id="note-wrap"><label>Deine Notiz</label>
       <textarea id="pnote" placeholder="z.B. für die Klausur merken..."></textarea>
       <div id="saved"></div></div>
   </div>
-  <div id="info">
-    <button id="iclose">&times;</button>
-    <h4>EKG / Kardiogramm</h4>
+
+  <div id="values" class="side hud">
+    <button class="xclose" id="iclose">&times;</button>
+    <h4>Werte &amp; EKG</h4>
     <canvas id="ekg"></canvas>
-    <div class="bpm"><b>72</b> Schläge/min (Ruhe)</div>
-    <div class="facts">
-      <div><span>Ruhepuls</span><b>60–100/min</b></div>
-      <div><span>Schläge/Tag</span><b>~100.000</b></div>
-      <div><span>Pumpleistung</span><b>~5 L/min</b></div>
-      <div><span>Gewicht</span><b>~300 g</b></div>
-      <div><span>Taktgeber</span><b>Sinusknoten</b></div>
-      <div><span>Herzton</span><b>Klappenschluss</b></div>
+    <div class="hrline">Herzfrequenz: <b id="hrval">72</b> /min</div>
+    <input type="range" id="hr" min="40" max="180" value="72">
+    <div class="mini">
+      <button class="btn" id="restbtn">Ruhe</button>
+      <button class="btn" id="exbtn">Belastung</button>
     </div>
+    <div class="row"><span>Schlagvolumen</span><b>~70 ml</b></div>
+    <div class="row"><span>Herzzeitvolumen</span><b id="co">5,0 L/min</b></div>
+    <div class="row"><span>Pumpt pro Tag</span><b id="perday">~7.200 L</b></div>
+    <div class="row"><span>Taktgeber</span><b>Sinusknoten</b></div>
   </div>
+
+  <div id="section" class="hud">
+    <span>oben</span><input type="range" id="sectionslider" min="-100" max="100" value="0"><span>unten</span>
+  </div>
+
+  <div id="banner" class="hud"></div>
+
   <div id="gate">
-    <h2>Menschliches Herz</h2>
-    <p>Kamera öffnen und mit der Hand steuern: Pinch dreht, zwei Hände zoomen. Ziehst du zwei gegriffene Hände auseinander, zerlegt sich das Herz in seine Einzelteile (Teardown) — jedes Teil kannst du anklicken. Maus & Trackpad gehen immer auch.</p>
+    <h2>Menschliches Herz — Anatomie-Lab</h2>
+    <p>Klick auf jede Struktur zeigt Funktion, Klinik und Merksatz. Über „Schichten" blendest du Systeme ein/aus (auch das Erregungsleitungssystem). „Infarkt zeigen" macht einen LAD-Verschluss sichtbar. Mit der Hand: Pinch dreht, zwei Hände zoomen, auseinanderziehen = Teardown. Maus & Trackpad gehen immer auch.</p>
     <button id="start">Kamera starten</button>
     <button id="skip">Ohne Kamera ansehen (nur Maus)</button>
     <div id="err"></div>
@@ -151,22 +189,19 @@ class OneEuro {
   alpha(c,dt){const tau=1/(2*Math.PI*c);return 1/(1+tau/dt);}
   filter(x,t){if(this.tPrev===null){this.tPrev=t;this.xPrev=x;return x;}let dt=(t-this.tPrev)/1000;if(dt<=0)dt=1/60;const dx=(x-this.xPrev)/dt;const edx=this.dxF.filter(dx,this.alpha(this.dCutoff,dt));const cutoff=this.minCutoff+this.beta*Math.abs(edx);const fx=this.xF.filter(x,this.alpha(cutoff,dt));this.xPrev=x;this.tPrev=t;return fx;}
 }
-
 function tagPart(obj,id,label,info){obj.traverse(o=>{o.userData.part={partId:id,label,info};});obj.userData.part={partId:id,label,info};return obj;}
 
 /* =====================================================================
-   2) DAS HERZ — realistisches, „nasses" Gewebe, Fettgewebe, Teardown
+   2) DAS HERZ
    ===================================================================== */
 function buildHeart(){
   const g=new THREE.Group();
   const C={atrium:0x8e3a40,aorta:0xc23a36,artery:0xb5302f,pulm:0x3f4f9e,vein:0x3f5d86,
-           pulmVein:0xaa3f44,coroVein:0x6f5aa0,valve:0xe7dcc6};
-  // „nasses" Gewebe: MeshPhysicalMaterial mit Clearcoat + Sheen reagiert auf die Umgebung
-  const tissue=(c,{rough=0.5,cc=0.55,ccr=0.32,sheen=0.35}={})=>new THREE.MeshPhysicalMaterial({color:c,roughness:rough,metalness:0.0,clearcoat:cc,clearcoatRoughness:ccr,sheen:sheen,sheenColor:new THREE.Color(0xffb0b4),sheenRoughness:0.55});
+           pulmVein:0xaa3f44,coroVein:0x6f5aa0,valve:0xe7dcc6,leit:0xffe04a};
+  const tissue=(c,o={})=>new THREE.MeshPhysicalMaterial({color:c,roughness:o.rough??0.5,metalness:0.0,clearcoat:o.cc??0.55,clearcoatRoughness:o.ccr??0.32,sheen:o.sheen??0.35,sheenColor:new THREE.Color(0xffb0b4),sheenRoughness:0.55,transparent:true});
   const V=a=>new THREE.Vector3(a[0],a[1],a[2]);
   const tube=(pts,r,c,o={})=>{const curve=new THREE.CatmullRomCurve3(pts.map(V));return new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(28,pts.length*18),r,14,false),tissue(c,o));};
 
-  /* ---- geformtes, maronenrotes Myokard mit Fettgewebe an den Furchen ---- */
   function sculptMyocardium(){
     const geo=new THREE.SphereGeometry(1,200,150);
     const pos=geo.attributes.position;const n=new THREE.Vector3();const colors=[];
@@ -174,124 +209,136 @@ function buildHeart(){
     for(let i=0;i<pos.count;i++){
       n.set(pos.getX(i),pos.getY(i),pos.getZ(i)).normalize();
       const nx=n.x,ny=n.y,nz=n.z;const lower=Math.max(0,-ny),upper=Math.max(0,ny);
-      let r=1.0;
-      r*=1+0.19*upper;                              // breitere Basis
-      r*=1+0.11*nx;                                 // linke Kammer bulliger
-      const gA=Math.exp(-Math.pow((nx+0.05)/0.14,2))*Math.max(0,nz);   // vordere Furche
-      const gP=Math.exp(-Math.pow((nx+0.02)/0.16,2))*Math.max(0,-nz);  // hintere Furche
-      const av=Math.exp(-Math.pow((ny-0.5)/0.12,2));                   // Kranzfurche
+      let r=1.0; r*=1+0.19*upper; r*=1+0.11*nx;
+      const gA=Math.exp(-Math.pow((nx+0.05)/0.14,2))*Math.max(0,nz);
+      const gP=Math.exp(-Math.pow((nx+0.02)/0.16,2))*Math.max(0,-nz);
+      const av=Math.exp(-Math.pow((ny-0.5)/0.12,2));
       r-=0.19*gA; r-=0.13*gP; r-=0.11*av*(1-Math.abs(nx)*0.4);
       const grooveShade=Math.min(0.85,Math.max(gA*1.3,gP*1.05,av*0.9));
-      r+=0.018*Math.sin(nx*17)*Math.cos(ny*15)*Math.sin(nz*17)+0.010*Math.sin(nx*33+ny*11)
-         +0.006*Math.sin(nx*60+nz*52);             // grobe + feine Oberfläche
-      const horiz=1-0.66*Math.pow(lower,1.3);       // schärfere Spitze
+      r+=0.018*Math.sin(nx*17)*Math.cos(ny*15)*Math.sin(nz*17)+0.010*Math.sin(nx*33+ny*11)+0.006*Math.sin(nx*60+nz*52);
+      const horiz=1-0.66*Math.pow(lower,1.3);
       let x=n.x*r*horiz, z=n.z*r*horiz*0.9, y=n.y*r*(1+0.4*lower);
       x+=-0.11*lower; z+=0.14*lower;
       pos.setXYZ(i,x,y,z);
-      // Farbe: maronenrot, dunkle Furchen, gelbliches Fett entlang Kranz-/Vorderfurche + Basis
       const fatF=Math.min(1, av*1.25 + gA*0.5 + Math.max(0,(ny-0.4))*0.5 );
       const col=base.clone().lerp(dark,grooveShade).lerp(fat,Math.min(0.55,fatF*0.55));
-      const micro=0.92+0.08*Math.sin(nx*44+ny*31)*Math.cos(nz*38);
-      col.multiplyScalar(micro);
+      col.multiplyScalar(0.92+0.08*Math.sin(nx*44+ny*31)*Math.cos(nz*38));
       colors.push(col.r,col.g,col.b);
     }
     geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
-    const m=new THREE.Mesh(geo,new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.5,metalness:0.0,clearcoat:0.6,clearcoatRoughness:0.3,sheen:0.45,sheenColor:new THREE.Color(0xff9aa0),sheenRoughness:0.5}));
+    const m=new THREE.Mesh(geo,new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.5,metalness:0.0,clearcoat:0.6,clearcoatRoughness:0.3,sheen:0.45,sheenColor:new THREE.Color(0xff9aa0),sheenRoughness:0.5,transparent:true}));
     m.scale.set(1.05,1.34,1.0);m.position.y=-0.15;return m;
   }
   const ventricles=sculptMyocardium();
-  tagPart(ventricles,"ventricles","Herzmuskel & Kammern (Myokard)","Die kräftige Muskelwand mit den beiden Kammern und der zulaufenden Spitze (Apex). Die linke Kammer hat die dickste Wand und pumpt das Blut in den Körper. Das gelbliche Gewebe in den Furchen ist Epikardfett, in dem die Kranzgefäße liegen.");
+  tagPart(ventricles,"ventricles","Herzmuskel & Kammern",{f:"Die unteren Pumpkammern. Die linke Kammer pumpt sauerstoffreiches Blut in den ganzen Körper, die rechte in die Lunge.",k:"Die linke Wand ist ~3x dicker. Lässt die Pumpkraft nach, spricht man von Herzinsuffizienz.",m:"Links = Lebenskreislauf = dicke Wand."});
 
-  /* ---- Vorhöfe ---- */
   const la=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),tissue(C.atrium));la.scale.set(0.6,0.58,0.6);la.position.set(0.55,1.0,-0.5);
   const laApp=new THREE.Mesh(new THREE.SphereGeometry(1,36,26),tissue(C.atrium));laApp.scale.set(0.3,0.24,0.38);laApp.position.set(0.78,0.78,0.2);
   const leftAtrium=new THREE.Group();leftAtrium.add(la,laApp);
-  tagPart(leftAtrium,"la","Linker Vorhof","Nimmt sauerstoffreiches Blut aus den vier Lungenvenen auf und leitet es durch die Mitralklappe in die linke Kammer.");
+  tagPart(leftAtrium,"la","Linker Vorhof",{f:"Nimmt sauerstoffreiches Blut aus den vier Lungenvenen auf und gibt es durch die Mitralklappe an die linke Kammer.",k:"Vergrößert sich bei Mitralklappenfehlern und beim Vorhofflimmern.",m:"Links kommt das Blut aus der Lunge rein."});
   const ra=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),tissue(C.atrium));ra.scale.set(0.64,0.64,0.6);ra.position.set(-0.82,0.72,0.05);
   const raApp=new THREE.Mesh(new THREE.SphereGeometry(1,36,26),tissue(C.atrium));raApp.scale.set(0.3,0.26,0.36);raApp.position.set(-0.55,0.9,0.45);
   const rightAtrium=new THREE.Group();rightAtrium.add(ra,raApp);
-  tagPart(rightAtrium,"ra","Rechter Vorhof","Sammelt sauerstoffarmes Blut aus den Hohlvenen und enthält den Sinusknoten — den natürlichen Taktgeber des Herzens.");
+  tagPart(rightAtrium,"ra","Rechter Vorhof",{f:"Sammelt sauerstoffarmes Blut aus den Hohlvenen und gibt es über die Trikuspidalklappe weiter. Enthält den Sinusknoten.",k:"Ausgangspunkt vieler Rhythmusstörungen.",m:"Rechts rein vom ganzen Körper."});
 
-  /* ---- Aorta + Bogen + Abgänge ---- */
   const aorta=tube([[0.05,0.55,-0.05],[0.05,1.3,-0.1],[0.05,1.95,-0.15],[0.2,2.35,-0.25],[0.55,2.4,-0.55],[0.6,2.0,-0.95],[0.55,1.0,-1.05],[0.55,0.2,-1.05]],0.24,C.aorta,{cc:0.7});
   const bc=tube([[0.18,2.32,-0.28],[0.0,2.85,-0.2],[-0.15,3.2,-0.15]],0.09,C.aorta,{cc:0.7});
   const lcc=tube([[0.35,2.4,-0.4],[0.4,2.95,-0.4],[0.42,3.3,-0.4]],0.075,C.aorta,{cc:0.7});
   const lsc=tube([[0.52,2.36,-0.5],[0.7,2.85,-0.55],[0.8,3.15,-0.6]],0.075,C.aorta,{cc:0.7});
   const aortaGrp=new THREE.Group();aortaGrp.add(aorta,bc,lcc,lsc);
-  tagPart(aortaGrp,"aorta","Aorta (Hauptschlagader)","Die größte Arterie des Körpers. Sie steigt aus der linken Kammer auf, bildet den Aortenbogen und führt sauerstoffreiches Blut in den Kreislauf. Drei Abgänge versorgen Kopf und Arme.");
+  tagPart(aortaGrp,"aorta","Aorta (Hauptschlagader)",{f:"Die größte Arterie des Körpers. Sie steigt aus der linken Kammer auf und verteilt sauerstoffreiches Blut in den Kreislauf.",k:"Erweiterung (Aneurysma) oder Einriss (Dissektion) sind lebensgefährlich.",m:"Drei Abgänge versorgen Kopf und Arme."});
 
-  /* ---- Lungenarterienstamm ---- */
   const pt=tube([[-0.45,0.55,0.45],[-0.3,1.2,0.25],[-0.1,1.7,-0.05],[0.0,1.9,-0.25]],0.22,C.pulm,{cc:0.7});
   const rpa=tube([[0.0,1.9,-0.25],[-0.5,1.85,-0.4],[-1.0,1.7,-0.5]],0.12,C.pulm,{cc:0.7});
   const lpa=tube([[0.0,1.9,-0.25],[0.5,1.9,-0.45],[0.95,1.7,-0.6]],0.12,C.pulm,{cc:0.7});
   const pulmGrp=new THREE.Group();pulmGrp.add(pt,rpa,lpa);
-  tagPart(pulmGrp,"pulmonary","Lungenarterienstamm","Führt sauerstoffarmes Blut aus der rechten Kammer zur Lunge. Er kreuzt vor der Aorta und teilt sich in rechte und linke Lungenarterie.");
+  tagPart(pulmGrp,"pulmonary","Lungenarterienstamm",{f:"Führt sauerstoffarmes Blut aus der rechten Kammer zur Lunge und teilt sich in rechte und linke Lungenarterie.",k:"Eine Lungenembolie verstopft sie (oft durch ein Blutgerinnsel aus dem Bein).",m:"Arterie mit sauerstoffARMem Blut (die Ausnahme)."});
 
-  /* ---- Hohlvenen ---- */
   const svc=tube([[-0.75,2.1,-0.05],[-0.78,1.5,0.0],[-0.8,0.95,0.05]],0.16,C.vein,{cc:0.6});
   const ivc=tube([[-0.7,-1.0,-0.2],[-0.72,-0.4,-0.1],[-0.7,0.25,0.0]],0.17,C.vein,{cc:0.6});
   const cavae=new THREE.Group();cavae.add(svc,ivc);
-  tagPart(cavae,"cavae","Obere & untere Hohlvene","Die beiden größten Venen — sie bringen das sauerstoffarme Blut aus dem Körper zurück in den rechten Vorhof.");
+  tagPart(cavae,"cavae","Obere & untere Hohlvene",{f:"Die beiden größten Venen. Sie bringen das sauerstoffarme Blut aus dem ganzen Körper zurück in den rechten Vorhof.",k:"Stauen sich bei Rechtsherzschwäche (sichtbar an gestauten Halsvenen).",m:"Oben = Kopf/Arme, unten = Bauch/Beine."});
 
-  /* ---- Lungenvenen ---- */
   const pv=new THREE.Group();
   [[0.95,1.3,-0.85],[1.08,1.0,-0.95],[0.98,0.7,-0.95],[1.02,1.1,-0.6]].forEach(p=>{pv.add(tube([[p[0],p[1],p[2]],[0.62,p[1]*0.85+0.1,-0.62],[0.5,1.0,-0.5]],0.085,C.pulmVein,{cc:0.6}));});
-  tagPart(pv,"pulmveins","Lungenvenen","Vier Venen, die das in der Lunge mit Sauerstoff angereicherte Blut zurück zum linken Vorhof bringen.");
+  tagPart(pv,"pulmveins","Lungenvenen",{f:"Vier Venen, die das in der Lunge mit Sauerstoff beladene Blut zum linken Vorhof bringen.",k:"Fehlmündungen sind seltene angeborene Herzfehler.",m:"Venen mit sauerstoffREICHem Blut (die Ausnahme)."});
 
-  /* ---- Kranzarterien ---- */
   const lmca=tube([[0.05,0.52,0.05],[0.12,0.48,0.32]],0.075,C.artery,{cc:0.75});
   const lad=tube([[0.12,0.48,0.32],[0.02,0.1,0.56],[-0.04,-0.5,0.56],[-0.05,-1.15,0.46],[0.0,-1.7,0.32],[0.12,-2.05,0.16]],0.07,C.artery,{cc:0.75});
   const diag1=tube([[0.0,-0.2,0.56],[0.38,-0.5,0.46],[0.62,-0.85,0.26]],0.045,C.artery,{cc:0.75});
   const diag2=tube([[-0.03,-0.7,0.53],[0.32,-1.0,0.4],[0.52,-1.3,0.2]],0.045,C.artery,{cc:0.75});
   const lca=new THREE.Group();lca.add(lmca,lad,diag1,diag2);
-  tagPart(lca,"lad","Linke Koronararterie (LAD)","Der vordere absteigende Ast zieht in der vorderen Furche zur Spitze und versorgt Vorderwand und Scheidewand. Ihre Verstopfung ist der klassische Vorderwandinfarkt.");
+  tagPart(lca,"lad","Linke Koronararterie (LAD)",{f:"Der vordere absteigende Ast versorgt die Vorderwand und den größten Teil der Scheidewand.",k:"Ein Verschluss verursacht den Vorderwandinfarkt, wegen seiner Gefährlichkeit Widowmaker genannt.",m:"LAD = lebenswichtigste Arterie."});
   const cx=tube([[0.12,0.48,0.32],[0.62,0.55,0.1],[0.97,0.35,-0.25],[0.82,0.12,-0.65],[0.4,0.02,-0.85]],0.06,C.artery,{cc:0.75});
   const om1=tube([[0.92,0.4,-0.15],[1.02,-0.1,-0.1],[0.86,-0.6,-0.05]],0.045,C.artery,{cc:0.75});
   const cxGrp=new THREE.Group();cxGrp.add(cx,om1);
-  tagPart(cxGrp,"circumflex","Ramus circumflexus","Verläuft in der linken Kranzfurche um die Seitenwand und versorgt Seiten- und Hinterwand der linken Kammer.");
+  tagPart(cxGrp,"circumflex","Ramus circumflexus",{f:"Verläuft in der linken Kranzfurche um die Seitenwand und versorgt Seiten- und Hinterwand der linken Kammer.",k:"Verschluss führt zum Seitenwandinfarkt.",m:"Zweiter großer Ast der linken Koronararterie."});
   const rca=tube([[-0.15,0.5,0.15],[-0.72,0.5,0.3],[-1.0,0.25,-0.1],[-0.85,0.0,-0.55],[-0.35,-0.05,-0.8]],0.07,C.artery,{cc:0.75});
   const pda=tube([[-0.35,-0.05,-0.8],[-0.2,-0.7,-0.65],[-0.1,-1.4,-0.45],[-0.02,-1.85,-0.25]],0.055,C.artery,{cc:0.75});
   const rcaGrp=new THREE.Group();rcaGrp.add(rca,pda);
-  tagPart(rcaGrp,"rca","Rechte Koronararterie (RCA)","Versorgt die rechte Kammer und meist die Hinterwand über die hintere absteigende Arterie.");
+  tagPart(rcaGrp,"rca","Rechte Koronararterie (RCA)",{f:"Versorgt die rechte Kammer, meist die Hinterwand und oft den Sinus- und AV-Knoten.",k:"Hinterwandinfarkt; kann gefährliche Bradykardien (langsamer Puls) auslösen.",m:"Versorgt bei ~80% der Menschen die Hinterwand."});
 
-  /* ---- Herzvenen ---- */
   const gcv=tube([[0.05,-1.9,0.2],[0.0,-1.0,0.45],[0.1,-0.2,0.5],[0.5,0.45,0.2],[0.9,0.3,-0.3]],0.06,C.coroVein,{cc:0.6});
   const cs=tube([[0.9,0.3,-0.3],[0.4,0.2,-0.75],[-0.2,0.2,-0.8],[-0.6,0.35,-0.5]],0.1,C.coroVein,{cc:0.6});
   const veinGrp=new THREE.Group();veinGrp.add(gcv,cs);
-  tagPart(veinGrp,"coronaryveins","Herzvenen & Sinus coronarius","Sammeln das verbrauchte Blut der Herzmuskulatur und münden über den Sinus coronarius in den rechten Vorhof.");
+  tagPart(veinGrp,"coronaryveins","Herzvenen & Sinus coronarius",{f:"Sammeln das verbrauchte Blut der Herzmuskulatur und leiten es über den Sinus coronarius in den rechten Vorhof.",k:"Der Sinus coronarius dient als Zugang für Herzschrittmacher-Sonden.",m:"Begleiten die Arterien als Abfluss."});
 
-  /* ---- Klappen mit Segeln (innere Komponente) ---- */
   const valves=new THREE.Group();
   const ring=(x,y,z,r)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(r,0.05,12,28),tissue(C.valve,{cc:0.3,sheen:0.1}));t.position.set(x,y,z);t.rotation.x=Math.PI/2;return t;};
-  const leaflet=(x,y,z,r,rot)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(r,3),new THREE.MeshPhysicalMaterial({color:C.valve,roughness:0.45,side:THREE.DoubleSide,clearcoat:0.3}));m.position.set(x,y,z);m.rotation.set(-Math.PI/2.4,rot,0);return m;};
+  const leaflet=(x,y,z,r,rot)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(r,3),new THREE.MeshPhysicalMaterial({color:C.valve,roughness:0.45,side:THREE.DoubleSide,clearcoat:0.3,transparent:true}));m.position.set(x,y,z);m.rotation.set(-Math.PI/2.4,rot,0);return m;};
   valves.add(ring(-0.4,0.42,0.15,0.2),leaflet(-0.4,0.4,0.15,0.16,0),leaflet(-0.4,0.4,0.15,0.16,2.1),leaflet(-0.4,0.4,0.15,0.16,4.2));
   valves.add(ring(0.45,0.4,-0.15,0.19),leaflet(0.45,0.38,-0.15,0.15,0.5),leaflet(0.45,0.38,-0.15,0.15,3.6));
   valves.add(ring(0.05,0.52,-0.05,0.14));valves.add(ring(-0.42,0.6,0.42,0.13));
-  tagPart(valves,"valves","Herzklappen","Vier Ventile als Einbahnstraße des Blutes: Trikuspidal- & Mitralklappe (mit Segeln) zwischen Vorhof und Kammer, Aorten- & Pulmonalklappe an den Ausgängen.");
+  tagPart(valves,"valves","Herzklappen",{f:"Vier Ventile sorgen für die Einbahnstraße des Blutes: Trikuspidal- und Mitralklappe innen, Aorten- und Pulmonalklappe an den Ausgängen.",k:"Verengt (Stenose) oder undicht (Insuffizienz) — häufige Ursache für Herzgeräusche.",m:"Lub-Dub ist das Schließen der Klappen."});
 
-  /* ---- Septum + Papillarmuskeln + Sehnenfäden (innere Komponenten) ---- */
   const septum=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),tissue(0x5e1c22));septum.scale.set(0.13,1.05,0.66);septum.position.set(-0.05,-0.35,0.12);septum.rotation.z=0.05;
-  tagPart(septum,"septum","Kammerscheidewand (Septum)","Die muskulöse Wand zwischen linker und rechter Kammer. Durch ihren oberen Teil verläuft das Erregungsleitungssystem.");
+  tagPart(septum,"septum","Kammerscheidewand (Septum)",{f:"Trennt die linke von der rechten Kammer und damit sauerstoffreiches von sauerstoffarmem Blut.",k:"Ein Loch darin ist der Ventrikelseptumdefekt (VSD), ein häufiger angeborener Herzfehler.",m:"Durch den oberen Teil läuft die Erregungsleitung."});
   const papGrp=new THREE.Group();
   const pap=(x,y,z)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.42,14),tissue(0x7a262c));m.position.set(x,y,z);return m;};
   papGrp.add(pap(0.25,-0.75,0.05),pap(0.52,-0.6,-0.15),pap(-0.45,-0.7,0.1));
   papGrp.add(tube([[0.25,-0.55,0.05],[0.35,-0.1,-0.05],[0.4,0.35,-0.12]],0.016,C.valve,{cc:0.3,sheen:0.1}));
   papGrp.add(tube([[0.52,-0.4,-0.15],[0.48,-0.0,-0.14],[0.5,0.35,-0.16]],0.016,C.valve,{cc:0.3,sheen:0.1}));
   papGrp.add(tube([[-0.45,-0.5,0.1],[-0.42,-0.05,0.12],[-0.4,0.4,0.13]],0.016,C.valve,{cc:0.3,sheen:0.1}));
-  tagPart(papGrp,"papillary","Papillarmuskeln & Sehnenfäden","Halten über feine Sehnenfäden (Chordae tendineae) die Segelklappen, damit diese beim Pumpen nicht in die Vorhöfe zurückschlagen.");
+  tagPart(papGrp,"papillary","Papillarmuskeln & Sehnenfäden",{f:"Halten über feine Sehnenfäden (Chordae tendineae) die Segelklappen, damit sie beim Pumpen nicht zurückschlagen.",k:"Ein Abriss nach Infarkt führt zu akutem Klappenversagen.",m:"Wie Halteseile eines Fallschirms."});
 
-  g.add(ventricles,leftAtrium,rightAtrium,aortaGrp,pulmGrp,cavae,pv,lca,cxGrp,rcaGrp,veinGrp,septum,papGrp,valves);
+  // Erregungsleitungssystem
+  const leitMat=new THREE.MeshStandardMaterial({color:C.leit,emissive:0x4a3a00,roughness:0.4,transparent:true});
+  const conduction=new THREE.Group();
+  const node=(x,y,z,r)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),leitMat);m.position.set(x,y,z);return m;};
+  const ctube=pts=>{const c=new THREE.CatmullRomCurve3(pts.map(V));return new THREE.Mesh(new THREE.TubeGeometry(c,48,0.022,8,false),leitMat);};
+  conduction.add(node(-0.62,1.05,0.32,0.09)); // Sinusknoten
+  conduction.add(node(-0.12,0.42,0.06,0.07)); // AV-Knoten
+  conduction.add(ctube([[-0.12,0.42,0.06],[-0.08,0.15,0.1],[-0.05,-0.1,0.12]])); // His-Bündel
+  conduction.add(ctube([[-0.05,-0.1,0.12],[0.18,-0.5,0.2],[0.34,-1.1,0.25]])); // linker Schenkel
+  conduction.add(ctube([[-0.05,-0.1,0.12],[-0.24,-0.5,0.2],[-0.4,-1.1,0.25]])); // rechter Schenkel
+  [[0.34,-1.1,0.25],[-0.4,-1.1,0.25]].forEach(b=>{for(let k=-1;k<=1;k++){conduction.add(ctube([[b[0],b[1],b[2]],[b[0]+k*0.12,b[1]-0.3,b[2]+0.05],[b[0]+k*0.2,b[1]-0.55,b[2]+0.1]]));}}); // Purkinje
+  tagPart(conduction,"conduction","Erregungsleitungssystem",{f:"Das elektrische System des Herzens: Sinusknoten gibt den Takt vor, der Reiz läuft über den AV-Knoten, das His-Bündel und die Schenkel zu den Purkinje-Fasern.",k:"Blockaden hier führen zu Herzblock und Rhythmusstörungen; bei Ausfall hilft ein Herzschrittmacher.",m:"Strom fließt von rechts oben (Sinus) nach unten zur Spitze."});
 
-  /* ---- Teardown-Richtungen (Explosionsansicht) ---- */
+  g.add(ventricles,leftAtrium,rightAtrium,aortaGrp,pulmGrp,cavae,pv,lca,cxGrp,rcaGrp,veinGrp,septum,papGrp,valves,conduction);
+
+  // Pathologie: Vorderwandinfarkt (versteckt)
+  const plaque=new THREE.Mesh(new THREE.SphereGeometry(0.1,16,12),new THREE.MeshStandardMaterial({color:0x20242a,roughness:0.6,transparent:true}));
+  plaque.position.set(0.08,0.2,0.57);plaque.visible=false;
+  tagPart(plaque,"plaque","Plaque / Verschluss (LAD)",{f:"Eine Ablagerung verengt und verschließt die LAD an dieser Stelle.",k:"Stoppt den Blutfluss zur Vorderwand — Beginn des Herzinfarkts. Behandlung: Stent/Katheter.",m:"Kleiner Pfropf, große Folgen."});
+  const infarct=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),new THREE.MeshStandardMaterial({color:0x35373b,roughness:0.85,transparent:true,opacity:0.7}));
+  infarct.scale.set(0.5,0.75,0.18);infarct.position.set(-0.02,-0.85,0.62);infarct.visible=false;
+  tagPart(infarct,"infarct","Infarktareal (Vorderwand)",{f:"Der Teil der Vorderwand, der hinter dem LAD-Verschluss nicht mehr durchblutet wird und abstirbt.",k:"Abgestorbenes Muskelgewebe pumpt nicht mehr mit; später vernarbt es. Je schneller die Arterie geöffnet wird, desto mehr Muskel wird gerettet.",m:"Zeit ist Muskel."});
+  g.add(plaque,infarct);
+
+  // Teardown-Richtungen
   const EX={ventricles:[0,-0.2,-2.1],valves:[0,1.9,0.3],septum:[1.7,0.3,0.3],papillary:[0,-1.8,0.6],
     la:[1.0,1.6,-0.5],ra:[-1.2,1.5,-0.3],aorta:[0.4,2.2,-0.7],pulmonary:[-0.7,1.9,0.5],
     cavae:[-1.8,1.0,0.0],pulmveins:[1.7,1.1,-0.6],lad:[0.1,-0.3,2.1],circumflex:[2.0,0.2,0.6],
-    rca:[-2.0,0.2,0.6],coronaryveins:[0.2,-0.3,-2.1]};
-  g.children.forEach(c=>{if(c.userData.part&&EX[c.userData.part.partId])c.userData.explodeVec=new THREE.Vector3(...EX[c.userData.part.partId]);});
-  return {group:g,zoom:9,spin:0.0035};
+    rca:[-2.0,0.2,0.6],coronaryveins:[0.2,-0.3,-2.1],conduction:[0,0,2.3]};
+  const SYS={ventricles:'myokard',septum:'myokard',papillary:'myokard',la:'vorhoefe',ra:'vorhoefe',
+    valves:'klappen',lad:'kranz',circumflex:'kranz',rca:'kranz',coronaryveins:'kranz',
+    aorta:'gross',pulmonary:'gross',cavae:'gross',pulmveins:'gross',conduction:'leitung'};
+  g.children.forEach(c=>{if(c.userData.part){const id=c.userData.part.partId;if(EX[id])c.userData.explodeVec=new THREE.Vector3(...EX[id]);if(SYS[id])c.userData.system=SYS[id];}});
+
+  return {group:g,zoom:9,spin:0.0035,patho:[plaque,infarct]};
 }
 
-const INTRO="Das Herz pumpt rund 100.000 Mal am Tag Blut durch den Körper. Vier Räume, vier Klappen, eigene Versorgung über die Kranzgefäße. Zieh es mit der Geste oder dem Knopf Auseinanderziehen in seine Einzelteile — auch die inneren Strukturen wie Klappen, Scheidewand und Papillarmuskeln schweben dann frei und lassen sich einzeln anklicken.";
+const INTRO="Das Herz pumpt rund 100.000 Mal am Tag Blut durch den Körper. Klick auf jede Struktur für Funktion, Klinik und Merksatz. Über die Schichten blendest du einzelne Systeme ein und aus, mit der Schnittebene schaust du hinein, und der Infarkt-Schalter zeigt, was bei einem LAD-Verschluss passiert.";
 
 /* =====================================================================
    3) VIEWER
@@ -301,18 +348,12 @@ const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 renderer.setSize(window.innerWidth,window.innerHeight);
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+renderer.localClippingEnabled=true;
 sceneEl.appendChild(renderer.domElement);
 
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,100);
-// Umgebungslicht für „nasse" Reflexionen (RoomEnvironment), mit Fallback
-(async()=>{
-  try{
-    const mod=await import("three/addons/environments/RoomEnvironment.js");
-    const pmrem=new THREE.PMREMGenerator(renderer);
-    scene.environment=pmrem.fromScene(new mod.RoomEnvironment(),0.04).texture;
-  }catch(e){console.warn("Env fallback",e);}
-})();
+(async()=>{try{const mod=await import("three/addons/environments/RoomEnvironment.js");const pmrem=new THREE.PMREMGenerator(renderer);scene.environment=pmrem.fromScene(new mod.RoomEnvironment(),0.04).texture;}catch(e){console.warn("env fallback",e);}})();
 scene.add(new THREE.AmbientLight(0xb0c4d0,0.35));
 const key=new THREE.DirectionalLight(0xffffff,1.7);key.position.set(4,6,7);scene.add(key);
 const fill=new THREE.DirectionalLight(0xbfe9ff,0.5);fill.position.set(-5,2,-4);scene.add(fill);
@@ -320,87 +361,143 @@ const rim=new THREE.PointLight(0xff7a86,1.4,40);rim.position.set(-6,-3,5);scene.
 const rim2=new THREE.PointLight(0x9ad6ff,0.8,40);rim2.position.set(6,-2,4);scene.add(rim2);
 
 const group=new THREE.Group();scene.add(group);
-let targetRotX=0,targetRotY=0;
+const clipPlane=new THREE.Plane(new THREE.Vector3(0,-1,0),5);
+let sectionOn=false,sectionVal=0;
+
+let targetRotX=0,targetRotY=0,velX=0,velY=0;
 const ZOOM_MIN=4,ZOOM_MAX=16;
 let autoRotate=true,beating=true,interacting=false;
 let targetOpen=0,curOpen=0;
+let bpm=72;
 
 const built=buildHeart();
 const spin=built.spin, defaultZoom=built.zoom;
-let targetZoom=defaultZoom;
-camera.position.set(0,0,defaultZoom);
+let targetZoom=defaultZoom;camera.position.set(0,0,defaultZoom);
 group.add(built.group);
-const topParts=built.group.children.filter(c=>c.userData&&c.userData.part).map(c=>({obj:c,base:c.position.clone(),ex:c.userData.explodeVec||c.position.clone().normalize().multiplyScalar(1.6)}));
+const allMats=[];
+group.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.side=THREE.DoubleSide;m.clippingPlanes=[clipPlane];allMats.push(m);});}});
 
+const topParts=built.group.children.filter(c=>c.userData&&c.userData.part&&c.userData.system).map(c=>({obj:c,base:c.position.clone(),ex:c.userData.explodeVec||new THREE.Vector3(0,1,0),system:c.userData.system,visTarget:1,visCur:1,meshes:[]}));
+topParts.forEach(p=>{p.obj.traverse(o=>{if(o.isMesh)p.meshes.push(o);});});
+
+/* ---- Schichten-Panel ---- */
+const LAYERS=[['myokard','Myokard & Kammern','#9a2b36'],['vorhoefe','Vorhöfe','#a83f46'],['klappen','Klappen','#e7dcc6'],['kranz','Kranzgefäße','#e8403c'],['gross','Große Gefäße','#4f63c4'],['leitung','Erregungsleitung','#ffe04a']];
+const layerState={};LAYERS.forEach(l=>layerState[l[0]]=(l[0]!=='leitung'));
+const layerList=document.getElementById("layerlist");
+LAYERS.forEach(l=>{
+  const row=document.createElement("div");row.className="lay"+(layerState[l[0]]?" on":"");
+  row.innerHTML='<span class="swatch" style="background:'+l[2]+'"></span><span class="name">'+l[1]+'</span><span class="sw"></span>';
+  row.addEventListener("click",()=>{layerState[l[0]]=!layerState[l[0]];row.classList.toggle("on",layerState[l[0]]);applyLayers();});
+  layerList.appendChild(row);
+});
+function applyLayers(){topParts.forEach(p=>{p.visTarget=layerState[p.system]?1:0;});}
+applyLayers();
+
+/* ---- Pathologie ---- */
+let infarctOn=false;
+const clinBtn=document.getElementById("clinbtn");
+const banner=document.getElementById("banner");
+function setInfarct(on){
+  infarctOn=on;built.patho.forEach(m=>m.visible=on);
+  clinBtn.classList.toggle("warnactive",on);clinBtn.textContent=on?"\u26A0 Infarkt aus":"\u26A0 Infarkt zeigen";
+  if(on){banner.textContent="Vorderwandinfarkt: Verschluss der LAD \u2192 Untergang der Vorderwand";banner.classList.add("show");}
+  else banner.classList.remove("show");
+}
+clinBtn.addEventListener("click",()=>setInfarct(!infarctOn));
+
+/* ---- Eingabe Maus ---- */
 let dragging=false,lastMX=0,lastMY=0,moved=0;
-renderer.domElement.addEventListener("pointerdown",e=>{dragging=true;moved=0;lastMX=e.clientX;lastMY=e.clientY;});
+renderer.domElement.addEventListener("pointerdown",e=>{dragging=true;moved=0;lastMX=e.clientX;lastMY=e.clientY;velX=velY=0;});
 window.addEventListener("pointerup",e=>{if(dragging&&moved<6)tryPick(e.clientX,e.clientY);dragging=false;});
-window.addEventListener("pointermove",e=>{if(!dragging)return;moved+=Math.abs(e.clientX-lastMX)+Math.abs(e.clientY-lastMY);interacting=true;targetRotY+=(e.clientX-lastMX)*0.006;targetRotX+=(e.clientY-lastMY)*0.006;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastMX=e.clientX;lastMY=e.clientY;});
+window.addEventListener("pointermove",e=>{if(!dragging)return;moved+=Math.abs(e.clientX-lastMX)+Math.abs(e.clientY-lastMY);interacting=true;const dy=(e.clientX-lastMX)*0.006,dx=(e.clientY-lastMY)*0.006;targetRotY+=dy;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX+dx));velY=dy;velX=dx;lastMX=e.clientX;lastMY=e.clientY;});
 renderer.domElement.addEventListener("wheel",e=>{e.preventDefault();interacting=true;targetZoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,targetZoom+e.deltaY*0.005));},{passive:false});
 
-const rotBtn=document.getElementById("rotbtn");
-rotBtn.addEventListener("click",()=>{autoRotate=!autoRotate;rotBtn.classList.toggle("active",autoRotate);});
-const beatBtn=document.getElementById("beatbtn");
-beatBtn.addEventListener("click",()=>{beating=!beating;beatBtn.classList.toggle("active",beating);if(!beating)group.scale.setScalar(1);});
-document.getElementById("resetbtn").addEventListener("click",()=>{targetRotX=0;targetRotY=0;targetZoom=defaultZoom;targetOpen=0;});
-const openBtn=document.getElementById("openbtn");
-openBtn.addEventListener("click",()=>{targetOpen=targetOpen>0.05?0:1;openBtn.classList.toggle("active",targetOpen>0.05);});
+/* ---- Buttons & Panels ---- */
+const $=id=>document.getElementById(id);
+function toggleSide(el){el.classList.toggle("show");}
+$("layerbtn").addEventListener("click",()=>toggleSide($("layers")));
+$("layerclose").addEventListener("click",()=>$("layers").classList.remove("show"));
+$("databtn").addEventListener("click",()=>toggleSide($("values")));
+$("iclose").addEventListener("click",()=>$("values").classList.remove("show"));
+$("pclose").addEventListener("click",()=>$("panel").classList.remove("show"));
+const rotBtn=$("rotbtn");rotBtn.addEventListener("click",()=>{autoRotate=!autoRotate;rotBtn.classList.toggle("active",autoRotate);});
+const beatBtn=$("beatbtn");beatBtn.addEventListener("click",()=>{beating=!beating;beatBtn.classList.toggle("active",beating);if(!beating)group.scale.setScalar(1);});
+const openBtn=$("openbtn");openBtn.addEventListener("click",()=>{targetOpen=targetOpen>0.05?0:1;openBtn.classList.toggle("active",targetOpen>0.05);});
+const sectionBtn=$("sectionbtn"),sectionUI=$("section"),sectionSlider=$("sectionslider");
+sectionBtn.addEventListener("click",()=>{sectionOn=!sectionOn;sectionBtn.classList.toggle("active",sectionOn);sectionUI.classList.toggle("show",sectionOn);});
+sectionSlider.addEventListener("input",()=>{sectionVal=parseFloat(sectionSlider.value)/100;});
+$("resetbtn").addEventListener("click",()=>{targetRotX=0;targetRotY=0;velX=velY=0;targetZoom=defaultZoom;targetOpen=0;openBtn.classList.remove("active");sectionOn=false;sectionBtn.classList.remove("active");sectionUI.classList.remove("show");sectionSlider.value=0;sectionVal=0;setInfarct(false);});
 
+/* ---- Werte / Herzfrequenz ---- */
+const hr=$("hr");
+function updateVitals(){
+  $("hrval").textContent=bpm;
+  const co=(70*bpm/1000);$("co").textContent=co.toFixed(1).replace('.',',')+" L/min";
+  $("perday").textContent="~"+Math.round(co*60*24).toLocaleString('de-DE')+" L";
+}
+hr.addEventListener("input",()=>{bpm=parseInt(hr.value);updateVitals();});
+$("restbtn").addEventListener("click",()=>{bpm=60;hr.value=60;updateVitals();});
+$("exbtn").addEventListener("click",()=>{bpm=140;hr.value=140;updateVitals();});
+updateVitals();
+
+/* ---- Klick-Info ---- */
 const raycaster=new THREE.Raycaster();const mouse=new THREE.Vector2();
-const panel=document.getElementById("panel");
-const pTitle=document.getElementById("ptitle"),pInfo=document.getElementById("pinfo");
-const pNote=document.getElementById("pnote"),pSaved=document.getElementById("saved");
-const pHead=document.getElementById("phead"),noteWrap=document.getElementById("note-wrap");
+const panel=$("panel"),pTitle=$("ptitle"),pInfo=$("pinfo"),pNote=$("pnote"),pSaved=$("saved"),pHead=$("phead"),noteWrap=$("note-wrap");
 let currentPartId=null;
-function tryPick(x,y){mouse.x=(x/window.innerWidth)*2-1;mouse.y=-(y/window.innerHeight)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(built.group.children,true);for(const h of hits){let o=h.object;while(o&&!(o.userData&&o.userData.part))o=o.parent;if(o&&o.userData.part){openPanel(o.userData.part);return;}}}
+function infoHTML(info){if(typeof info==='string')return info;let h='';if(info.f)h+='<b>Funktion:</b> '+info.f+'<br><br>';if(info.k)h+='<b>Klinik:</b> '+info.k;if(info.m)h+='<br><br><b>Merksatz:</b> '+info.m;return h;}
+function tryPick(x,y){mouse.x=(x/window.innerWidth)*2-1;mouse.y=-(y/window.innerHeight)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(group.children,true);for(const h of hits){let o=h.object;while(o&&!(o.userData&&o.userData.part))o=o.parent;if(o&&o.userData.part&&o.visible){openPanel(o.userData.part);return;}}}
 function noteKey(id){return "anote:heart:"+id;}
-function openPanel(part){
-  currentPartId=part.partId;pTitle.textContent=part.label;pInfo.textContent=part.info;
+function openPanel(part){currentPartId=part.partId;pTitle.textContent=part.label;pInfo.innerHTML=infoHTML(part.info);
   if(part.overview){pHead.classList.add("ov");noteWrap.style.display="none";}
   else{pHead.classList.remove("ov");noteWrap.style.display="block";let s="";try{s=localStorage.getItem(noteKey(part.partId))||"";}catch(e){}pNote.value=s;pSaved.textContent="";}
-  panel.classList.add("show");
-}
+  panel.classList.add("show");}
 pNote.addEventListener("input",()=>{if(!currentPartId)return;try{localStorage.setItem(noteKey(currentPartId),pNote.value);pSaved.textContent="gespeichert";}catch(e){pSaved.textContent="speichern nicht möglich";}});
-document.getElementById("pclose").addEventListener("click",()=>panel.classList.remove("show"));
-document.getElementById("infobtn").addEventListener("click",()=>openPanel({partId:null,label:"Menschliches Herz",info:INTRO,overview:true}));
+$("infobtn").addEventListener("click",()=>openPanel({partId:null,label:"Menschliches Herz",info:INTRO,overview:true}));
 setTimeout(()=>openPanel({partId:null,label:"Menschliches Herz",info:INTRO,overview:true}),400);
 
+/* ---- Render-Schleife ---- */
 const _v=new THREE.Vector3();
 function animate(){
   requestAnimationFrame(animate);
-  if(autoRotate&&!interacting)targetRotY+=spin;
+  if(!interacting){
+    if(Math.abs(velY)>0.0008||Math.abs(velX)>0.0008){targetRotY+=velY;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX+velX));velY*=0.94;velX*=0.94;}
+    else if(autoRotate)targetRotY+=spin;
+  }
   group.rotation.x+=(targetRotX-group.rotation.x)*0.12;
   group.rotation.y+=(targetRotY-group.rotation.y)*0.12;
   camera.position.z+=(targetZoom-camera.position.z)*0.12;
   curOpen+=(targetOpen-curOpen)*0.12;
-  topParts.forEach(p=>{p.obj.position.copy(p.base).add(_v.copy(p.ex).multiplyScalar(curOpen));});
-  if(beating){const t=performance.now()/1000*(72/60);const ph=t%1;const pulse=Math.exp(-((ph)*(ph))/0.004)+0.6*Math.exp(-((ph-0.28)*(ph-0.28))/0.004);group.scale.setScalar(1+0.045*pulse*(1-curOpen));}
+  topParts.forEach(p=>{
+    p.obj.position.copy(p.base).add(_v.copy(p.ex).multiplyScalar(curOpen));
+    p.visCur+=(p.visTarget-p.visCur)*0.18;
+    const vis=p.visCur>0.02;p.obj.visible=vis;
+    p.meshes.forEach(m=>{if(m.material){m.material.opacity=p.visCur;}});
+  });
+  clipPlane.constant=sectionOn?(-sectionVal*2.6):5;
+  if(beating){const t=performance.now()/1000*(bpm/60);const ph=t%1;const pulse=Math.exp(-((ph)*(ph))/0.004)+0.6*Math.exp(-((ph-0.28)*(ph-0.28))/0.004);group.scale.setScalar(1+0.04*pulse*(1-curOpen));}
   interacting=false;
   renderer.render(scene,camera);
 }
 animate();
 window.addEventListener("resize",()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
 
-/* ---- EKG-Panel ---- */
-const infoPanel=document.getElementById("info");
-document.getElementById("databtn").addEventListener("click",()=>infoPanel.classList.toggle("show"));
-document.getElementById("iclose").addEventListener("click",()=>infoPanel.classList.remove("show"));
+/* ---- EKG ---- */
 (function ekg(){
-  const c=document.getElementById("ekg");const x=c.getContext("2d");
-  function fit(){c.width=c.clientWidth||240;c.height=c.clientHeight||70;}fit();window.addEventListener("resize",fit);
+  const c=$("ekg");const x=c.getContext("2d");
+  function fit(){c.width=c.clientWidth||240;c.height=c.clientHeight||64;}fit();window.addEventListener("resize",fit);
   const data=[];let phase=0;
   const beat=p=>{const gg=(cc,w,h)=>h*Math.exp(-((p-cc)*(p-cc))/(2*w*w));return gg(0.14,0.018,0.12)-gg(0.30,0.008,0.18)+gg(0.33,0.006,0.95)-gg(0.36,0.010,0.32)+gg(0.56,0.04,0.28);};
-  function draw(){requestAnimationFrame(draw);const w=c.width,h=c.height;phase+=0.006;data.push(beat(phase%1));while(data.length>w)data.shift();x.clearRect(0,0,w,h);x.strokeStyle="rgba(45,212,191,.07)";x.lineWidth=1;for(let gx=0;gx<w;gx+=14){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,h);x.stroke();}x.strokeStyle="#2dd4bf";x.lineWidth=2;x.beginPath();const mid=h*0.6,amp=h*0.4;for(let i=0;i<data.length;i++){const yy=mid-data[i]*amp;if(i===0)x.moveTo(0,yy);else x.lineTo(i,yy);}x.stroke();}
+  function draw(){requestAnimationFrame(draw);const w=c.width,h=c.height;phase+=0.004*(bpm/72);data.push(beat(phase%1));while(data.length>w)data.shift();x.clearRect(0,0,w,h);x.strokeStyle="rgba(45,212,191,.07)";x.lineWidth=1;for(let gx=0;gx<w;gx+=14){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,h);x.stroke();}x.strokeStyle="#2dd4bf";x.lineWidth=2;x.beginPath();const mid=h*0.62,amp=h*0.42;for(let i=0;i<data.length;i++){const yy=mid-data[i]*amp;if(i===0)x.moveTo(0,yy);else x.lineTo(i,yy);}x.stroke();}
   draw();
 })();
 
 /* =====================================================================
    4) HAND-TRACKING
    ===================================================================== */
-const video=document.getElementById("video"),overlay=document.getElementById("overlay"),octx=overlay.getContext("2d");
-const camState=document.getElementById("camstate"),handState=document.getElementById("handstate"),dot=document.getElementById("dot"),errEl=document.getElementById("err");
+const video=$("video"),overlay=$("overlay"),octx=overlay.getContext("2d");
+const camState=$("camstate"),handState=$("handstate"),dot=$("dot"),errEl=$("err");
 let handLandmarker=null,lastVideoTime=-1,pinching=false,lastPX=0,lastPY=0,twoStartDist=null,twoStartZoom=null,openStartDist=null,openStartVal=null;
-const fPX=new OneEuro(1.0,0.015),fPY=new OneEuro(1.0,0.015),fDist=new OneEuro(1.0,0.01),fOpen=new OneEuro(1.0,0.01);
+const fPX=new OneEuro(1.0,0.012),fPY=new OneEuro(1.0,0.012),fDist=new OneEuro(1.0,0.01),fOpen=new OneEuro(1.0,0.01);
 const CONN=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 const d2=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
@@ -412,7 +509,7 @@ async function startCamera(){
     const stream=await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720,facingMode:"user"}});
     video.srcObject=stream;await video.play();
     overlay.width=video.videoWidth||1280;overlay.height=video.videoHeight||720;
-    document.getElementById("cam").classList.remove("hidden");camState.textContent="an";dot.classList.add("live");detectLoop();
+    $("cam").classList.remove("hidden");camState.textContent="an";dot.classList.add("live");detectLoop();
   }catch(e){console.error(e);errEl.textContent="Kamera/Modell-Fehler: "+(e.message||e);}
 }
 function detectLoop(){if(handLandmarker&&video.readyState>=2&&video.currentTime!==lastVideoTime){lastVideoTime=video.currentTime;handleHands(handLandmarker.detectForVideo(video,performance.now()));}requestAnimationFrame(detectLoop);}
@@ -430,7 +527,7 @@ function handleHands(res){
       twoStartDist=null;const d=fOpen.filter(wristDist,now);
       if(openStartDist===null){openStartDist=d;openStartVal=targetOpen;}
       interacting=true;targetOpen=Math.max(0,Math.min(1,openStartVal+(d-openStartDist)*2.2));
-      if(targetOpen>0.05)openBtn.classList.add("active");else openBtn.classList.remove("active");
+      openBtn.classList.toggle("active",targetOpen>0.05);
     } else {
       openStartDist=null;const d=fDist.filter(wristDist,now);
       if(twoStartDist===null){twoStartDist=d;twoStartZoom=targetZoom;}
@@ -444,14 +541,14 @@ function handleHands(res){
     const px=fPX.filter(1-(lm[4].x+lm[8].x)/2,now),py=fPY.filter((lm[4].y+lm[8].y)/2,now);
     if(!pinching&&ratio<0.40){pinching=true;lastPX=px;lastPY=py;}
     else if(pinching&&ratio>0.55){pinching=false;}
-    if(pinching){interacting=true;targetRotY+=(px-lastPX)*5.0;targetRotX+=(py-lastPY)*5.0;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));lastPX=px;lastPY=py;}
+    if(pinching){interacting=true;const dy=(px-lastPX)*5.0,dx=(py-lastPY)*5.0;targetRotY+=dy;targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX+dx));velY=dy;velX=dx;lastPX=px;lastPY=py;}
     return;
   }
   pinching=false;
 }
 
-const gate=document.getElementById("gate"),startBtn=document.getElementById("start");
-document.getElementById("skip").addEventListener("click",()=>gate.classList.add("gone"));
+const gate=$("gate"),startBtn=$("start");
+$("skip").addEventListener("click",()=>gate.classList.add("gone"));
 startBtn.addEventListener("click",async()=>{startBtn.disabled=true;startBtn.textContent="lädt…";await startCamera();if(!errEl.textContent)gate.classList.add("gone");startBtn.disabled=false;startBtn.textContent="Kamera starten";});
 </script>
 </body>
